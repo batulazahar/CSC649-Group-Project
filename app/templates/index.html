@@ -1,11 +1,12 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Chatbot</title>
+    <title>TravelMate AI | Travel Budget Assistant</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/style.css') }}">
@@ -17,14 +18,33 @@
 
         <!-- Sidebar -->
         <aside class="sidebar">
-            <h2>My Chatbot</h2>
 
-            <button class="new-chat-btn">+ New Chat</button>
+            <div class="sidebar-brand">
+                <div class="brand-icon">✈</div>
+                <div>
+                    <h2>TravelMate AI</h2>
+                    <p>Your Travel Budget Assistant</p>
+                </div>
+            </div>
+
+            <button class="new-chat-btn" type="button">
+                <span>＋</span> New Chat
+            </button>
 
             <div class="chat-history">
-                <h3>Recent Chats</h3>
-                <p>No conversations yet</p>
+                <h3>RECENT CONVERSATIONS</h3>
+
+                <div class="history-empty">
+                    <span>💬</span>
+                    <p>No conversations yet</p>
+                </div>
             </div>
+
+            <div class="sidebar-footer">
+                <span>✈</span>
+                <p>Plan smarter. Travel further.</p>
+            </div>
+
         </aside>
 
 
@@ -33,7 +53,23 @@
 
             <!-- Header -->
             <header class="chat-header">
-                <h2>Chat Assistant</h2>
+
+                <div class="header-info">
+                    <div class="assistant-avatar">✈</div>
+
+                    <div>
+                        <h2>Travel Assistant</h2>
+                        <p>
+                            <span class="online-indicator"></span>
+                            Your personal travel budget companion
+                        </p>
+                    </div>
+                </div>
+
+                <div class="header-label">
+                    AI POWERED
+                </div>
+
             </header>
 
 
@@ -41,8 +77,45 @@
             <section class="chat-messages" id="chatMessages">
 
                 <div class="welcome-message">
-                    <h1>Hello! 👋</h1>
-                    <p>How can I help you today?</p>
+
+                    <div class="welcome-icon">✈️</div>
+
+                    <h1>Where would you like to go?</h1>
+
+                    <p>
+                        Welcome to TravelMate AI! I'm here to help you
+                        plan your travel budget, track expenses and
+                        manage your spending.
+                    </p>
+
+                    <div class="suggestion-container">
+
+                        <div class="suggestion-card">
+                            <span>💰</span>
+                            <h3>Plan My Budget</h3>
+                            <p>Plan your travel expenses and budget.</p>
+                        </div>
+
+                        <div class="suggestion-card">
+                            <span>🧾</span>
+                            <h3>Track Expenses</h3>
+                            <p>Keep track of your daily spending.</p>
+                        </div>
+
+                        <div class="suggestion-card">
+                            <span>📊</span>
+                            <h3>Monitor Budget</h3>
+                            <p>Check your spending and remaining balance.</p>
+                        </div>
+
+                        <div class="suggestion-card">
+                            <span>💱</span>
+                            <h3>Currency Conversion</h3>
+                            <p>Convert foreign currencies into MYR.</p>
+                        </div>
+
+                    </div>
+
                 </div>
 
             </section>
@@ -51,11 +124,24 @@
             <!-- Message Input -->
             <div class="chat-input-container">
 
-                <input type="text"
-                       id="userInput"
-                       placeholder="Type your message here...">
+                <div class="input-wrapper">
 
-                <button id="sendButton">Send</button>
+                    <input type="text"
+                           id="userInput"
+                           placeholder="Ask me about your travel budget..."
+                           autocomplete="off"
+                           aria-label="Enter your message">
+
+                    <button id="sendButton" type="button">
+                        Send <span>➤</span>
+                    </button>
+
+                </div>
+
+                <p class="input-disclaimer">
+                    TravelMate AI may occasionally provide inaccurate
+                    information. Please verify important travel details.
+                </p>
 
             </div>
 
