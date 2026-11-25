@@ -1,8 +1,10 @@
 
 import os
-import pandas as pd
 from dotenv import load_dotenv
 from google import genai
+from dotenv import load_dotenv
+
+from data_loader import load_travel_dataset, load_slang_dataset
 
 # Load environment variables
 load_dotenv()
@@ -15,13 +17,9 @@ if not API_KEY:
 # Initialize Gemini
 client = genai.Client(api_key=API_KEY)
 
-# Dataset paths
-TRAVEL_DATASET_PATH = "data/TransitChat-Conversational_Route_and_Schedule_Dataset (1).csv"
-SLANG_DATASET_PATH = "data/genz_slang.csv"
-
-# Load both datasets
-travel_df = pd.read_csv(TRAVEL_DATASET_PATH)
-slang_df = pd.read_csv(SLANG_DATASET_PATH)
+# Load both datasets using data_loader.py
+travel_df = load_travel_dataset()
+slang_df = load_slang_dataset()
 
 
 import re
@@ -138,7 +136,7 @@ def get_chatbot_response(user_question):
     """
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.8-flash",
         contents=prompt
     )
 
