@@ -1,55 +1,147 @@
 
+// ==========================================
+// 1. GET HTML ELEMENTS
+// ==========================================
+
 const userInput = document.getElementById("userInput");
 const sendButton = document.getElementById("sendButton");
 const chatMessages = document.getElementById("chatMessages");
 
-function sendMessage() {
+
+// ==========================================
+// 2. DISPLAY CHAT MESSAGE
+// ==========================================
+
+function displayMessage(message, sender) {
+
+    // Remove welcome message
+    const welcomeMessage = document.querySelector(".welcome-message");
+
+    if (welcomeMessage) {
+        welcomeMessage.remove();
+    }
+
+    // Create message container
+    const messageDiv = document.createElement("div");
+
+    messageDiv.classList.add("message", sender);
+
+    // Create message text
+    const messageText = document.createElement("p");
+
+    messageText.textContent = message;
+
+    messageDiv.appendChild(messageText);
+
+    // Add message to chat area
+    chatMessages.appendChild(messageDiv);
+
+    // Scroll to latest message
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+}
+
+
+// ==========================================
+// 3. SEND MESSAGE TO FLASK
+// ==========================================
+
+async function sendMessage() {
 
     const message = userInput.value.trim();
 
+    // Check empty message
     if (message === "") {
         return;
     }
 
-    // Remove welcome message
-    const welcome = document.querySelector(".welcome-message");
-
-    if (welcome) {
-        welcome.remove();
-    }
-
-    // Display user message
-    const userMessage = document.createElement("div");
-    userMessage.textContent = message;
-    userMessage.style.cssText =
-        "background:#5b5bd6;color:white;padding:12px 18px;" +
-        "border-radius:12px;margin:15px 0 15px auto;" +
-        "max-width:70%;width:fit-content;";
-
-    chatMessages.appendChild(userMessage);
-
-    // Temporary chatbot response
-    const botMessage = document.createElement("div");
-    botMessage.textContent = "Hello! This is a test response.";
-    botMessage.style.cssText =
-        "background:white;color:#333;padding:12px 18px;" +
-        "border-radius:12px;margin:15px 0;max-width:70%;";
-
-    chatMessages.appendChild(botMessage);
+    // Display user's message
+    displayMessage(message, "user-message");
 
     // Clear input
     userInput.value = "";
 
-    // Scroll to latest message
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    // Disable button while waiting
+    sendButton.disabled = true;
+
+    // Display loading message
+    displayMessage("Thinking...", "bot-message");
+
+    const loadingMessage = chatMessages.lastElementChild;
+
+    try {
+
+        // Send message to Flask API
+        const response = await fetch("/chat", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                message: message
+            })
+
+        });
+
+        const data = await response.json();
+
+        // Remove loading message
+        loadingMessage.remove();
+
+        // Check API response
+        if (!response.ok) {
+
+            throw new Error(
+                data.error || "Something went wrong."
+            );
+
+        }
+
+        // Display chatbot response
+        displayMessage(data.response, "bot-message");
+
+    } catch (error) {
+
+        // Remove loading message
+        loadingMessage.remove();
+
+        displayMessage(
+            "Sorry, something went wrong: " + error.message,
+            "bot-message"
+        );
+
+    } finally {
+
+        // Enable button again
+        sendButton.disabled = false;
+
+        userInput.focus();
+
+    }
+
 }
 
-// Send button
+
+// ==========================================
+// 4. SEND BUTTON EVENT
+// ==========================================
+
 sendButton.addEventListener("click", sendMessage);
 
-// Press Enter to send
-userInput.addEventListener("keypress", function(event) {
+
+// ==========================================
+// 5. ENTER KEY EVENT
+// ==========================================
+
+userInput.addEventListener("keydown", function(event) {
+
     if (event.key === "Enter") {
+
         sendMessage();
+
     }
+
 });
