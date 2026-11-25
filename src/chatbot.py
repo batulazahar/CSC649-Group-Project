@@ -61,11 +61,17 @@ def retrieve_travel_records(user_question, top_n=5):
     ]):
         detected_intent = "status_query"
 
+    
     elif any(phrase in question for phrase in [
         "how do i get", "how to get", "directions",
-        "route", "way to", "travel from"
+        "route", "way to", "travel from",
+        "how long", "how much time",
+        "how many minutes", "how many hours",
+        "journey duration", "travel time",
+        "trip duration"
     ]):
         detected_intent = "route_query"
+
 
     elif any(phrase in question for phrase in [
         "what time", "when is", "next", "departure",
@@ -137,10 +143,19 @@ def retrieve_travel_records(user_question, top_n=5):
             continue
 
         # Remove duplicate records
-        if record_query in seen_records:
+        
+        # Remove only completely identical records
+        record_key = (
+            record_query,
+            record_intent,
+            " ".join(str(row["entities"]).lower().split()),
+            " ".join(str(row["response"]).lower().split())
+        )
+
+        if record_key in seen_records:
             continue
 
-        seen_records.add(record_query)
+        seen_records.add(record_key)
 
         record_words = set(
             re.findall(r"\b\w+\b", record_query)
@@ -394,6 +409,24 @@ def get_chatbot_response(user_question):
         the user's question, explain this clearly.
 
     14. Keep your response concise and easy to understand.
+    
+    15. If multiple retrieved records contain conflicting
+        information for the same question or route,
+        DO NOT choose one answer arbitrarily.
+
+    16. Clearly explain that the dataset contains
+        different answers for the same route.
+
+    17. NEVER invent reasons for conflicting information.
+        For example, do not assume that different journey
+        durations are caused by different times of day,
+        traffic conditions or transport services unless
+        the retrieved records explicitly state this.
+
+    18. If conflicting information exists, present the
+        different values exactly as provided and explain
+        that the information needs verification.
+
     """
 
     # Generate response using Gemini
