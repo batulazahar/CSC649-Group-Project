@@ -254,182 +254,164 @@ def retrieve_slang_records(user_question):
 # ==========================================
 
 
+
 def get_chatbot_response(user_question):
 
-    # Retrieve relevant travel records
+    # 1. Retrieve relevant information
     relevant_travel = retrieve_travel_records(user_question)
-
-    # Retrieve relevant slang records
     relevant_slang = retrieve_slang_records(user_question)
 
-    # Check whether travel records are available
-    if not relevant_travel:
-
-        if relevant_slang:
-
-            slang_answers = []
-
-            for row in relevant_slang:
-
-                slang_answers.append(
-                    f"{row['keyword']}: {row['description']}"
-                )
-
-            return (
-                "Here are the slang meanings:\n"
-                + "\n".join(slang_answers)
-            )
-
-        return (
-            "Sorry, I couldn't find relevant information "
-            "in the travel dataset. Please try another question."
-        )
-
-    # Extract the requested route
-    route_match = re.search(
-        r"from\s+(.+?)\s+to\s+(.+?)(?=\s+(?:using|by|running|operating|available|cancelled|canceled|delayed|today|tomorrow|next|this|on)\b|[?.!,]|$)",
-        user_question.lower()
-    )
-
-    origin = ""
-    destination = ""
-
-    if route_match:
-
-        origin = route_match.group(1).strip()
-        destination = route_match.group(2).strip()
-
-    # Prepare travel information
-    travel_context = ""
-
-    for row in relevant_travel:
-
-        record_query = str(row["query"]).lower()
-
-        # Determine whether the retrieved route is exact
-        exact_route = False
-
-        if origin and destination:
-
-            exact_route = (
-                re.search(
-                    rf"\bfrom\s+{re.escape(origin)}\s+to\s+{re.escape(destination)}\b",
-                    record_query
-                ) is not None
-            )
-
-        if origin and destination:
-
-            if exact_route:
-                match_type = "EXACT ROUTE MATCH"
-
-            else:
-                match_type = "SIMILAR ROUTE - NOT AN EXACT MATCH"
-
-        else:
-
-            match_type = "RELEVANT RETRIEVED RECORD"
-
-        travel_context += (
-            f"Match Type: {match_type}\n"
-            f"Question: {row['query']}\n"
-            f"Intent: {row['intent']}\n"
-            f"Entities: {row['entities']}\n"
-            f"Answer: {row['response']}\n\n"
-        )
-
-    # Prepare slang information
+    # 2. Prepare slang information
     slang_context = ""
 
     for row in relevant_slang:
-
         slang_context += (
-            f"Slang: {row['keyword']}\n"
-            f"Meaning: {row['description']}\n\n"
+            f"{row['keyword']}: {row['description']}\n"
         )
 
-    # Create prompt
-    prompt = f"""
-    You are a helpful Travel Chatbot.
+    question = user_question.lower()
 
-    Your answers MUST be based only on the retrieved
-    information provided below.
+    # 3. Identify transport-related questions
+    transport_related = any(phrase in question for phrase in [
+        "how do i get",
+        "how to get",
+        "directions",
+        "route",
+        "travel from",
+        "train",
+        "bus",
+        "metro",
+        "timetable",
+        "schedule",
+        "departure",
+        "running",
+        "operating",
+        "delayed",
+        "cancelled",
+        "canceled"
+    ])
 
-    TRAVEL INFORMATION:
-    {travel_context}
+    # 4. Decide which information source to use
 
-    GEN Z SLANG INFORMATION:
-    {slang_context}
+    if not relevant_travel:
 
-    USER QUESTION:
-    {user_question}
+        # Transport question without matching dataset records
+        if transport_related:
+            return (
+                "Sorry, I couldn't find matching transport "
+                "information in our dataset. "
+                "Please try another route or question."
+            )
 
-    INSTRUCTIONS:
+        # General travel question: use Gemini knowledge
+        prompt = f"""
+        You are a friendly and helpful Travel Chatbot.
 
-    1. Answer the user's question clearly and naturally.
+        Answer the user's general travel question using
+        your general knowledge.
 
-    2. Use retrieved travel records as your source
-       of information.
+        You can help with:
+        - Tourist attractions
+        - Travel destinations
+        - Food recommendations
+        - Travel itineraries
+        - Travel tips
+        - Travel activities
 
-    3. Pay attention to the Match Type of each record.
+        GEN Z SLANG INFORMATION:
+        {slang_context}
 
-    4. EXACT ROUTE MATCH records may be used to answer
-       route-specific questions.
+        USER QUESTION:
+        {user_question}
 
-    5. SIMILAR ROUTE records are only references.
-       NEVER use their journey duration, destination,
-       departure time or other details as the answer
-       for a different requested route.
+        INSTRUCTIONS:
+        1. Give useful and relevant travel information.
+        2. Keep answers friendly and easy to understand.
+        3. Do not invent real-time information.
+        4. Do not invent transport schedules or service status.
+        5. Tell users to verify information that may change.
+        6. Explain slang expressions when relevant.
+        """
 
-    6. If no exact route information is available,
-       clearly explain that the requested route
-       information is unavailable.
+    else:
 
-    7. Use slang information to understand Gen Z
-       expressions used by the user.
+        # 5. Dataset-based transport answers
+        travel_context = ""
 
-    8. Do not add information that is not supported
-       by the retrieved records.
+        route_match = re.search(
+            r"from\s+(.+?)\s+to\s+(.+?)(?=\s+(?:using|by|running|operating|available|cancelled|canceled|delayed|today|tomorrow|next|this|on)\b|[?.!,]|$)",
+            question
+        )
 
-    9. Never assume that a transport service is
-       operating normally or currently available.
+        origin = ""
+        destination = ""
 
-    10. If schedules, service status or booking details
-        are not provided in the retrieved records,
-        clearly state that the information is unavailable.
+        if route_match:
+            origin = route_match.group(1).strip()
+            destination = route_match.group(2).strip()
 
-    11. Do not invent transport schedules, prices,
-        routes or service status.
+        for row in relevant_travel:
 
-    12. Preserve all factual details from the dataset,
-        including transport modes, locations, times
-        and journey durations.
+            record_query = str(row["query"]).lower()
 
-    13. If the retrieved information does not answer
-        the user's question, explain this clearly.
+            exact_route = False
 
-    14. Keep your response concise and easy to understand.
-    
-    15. If multiple retrieved records contain conflicting
-        information for the same question or route,
-        DO NOT choose one answer arbitrarily.
+            if origin and destination:
+                exact_route = (
+                    re.search(
+                        rf"\bfrom\s+{re.escape(origin)}\s+to\s+{re.escape(destination)}\b",
+                        record_query
+                    ) is not None
+                )
 
-    16. Clearly explain that the dataset contains
-        different answers for the same route.
+            if origin and destination:
+                match_type = (
+                    "EXACT ROUTE MATCH"
+                    if exact_route
+                    else "SIMILAR ROUTE - NOT AN EXACT MATCH"
+                )
+            else:
+                match_type = "RELEVANT RETRIEVED RECORD"
 
-    17. NEVER invent reasons for conflicting information.
-        For example, do not assume that different journey
-        durations are caused by different times of day,
-        traffic conditions or transport services unless
-        the retrieved records explicitly state this.
+            travel_context += (
+                f"Match Type: {match_type}\n"
+                f"Question: {row['query']}\n"
+                f"Intent: {row['intent']}\n"
+                f"Entities: {row['entities']}\n"
+                f"Answer: {row['response']}\n\n"
+            )
 
-    18. If conflicting information exists, present the
-        different values exactly as provided and explain
-        that the information needs verification.
+        prompt = f"""
+        You are a helpful Travel Chatbot.
 
-    """
+        Answer using ONLY the retrieved travel information
+        for transport-related facts.
 
-    # Generate response using Gemini
+        TRAVEL INFORMATION:
+        {travel_context}
+
+        GEN Z SLANG INFORMATION:
+        {slang_context}
+
+        USER QUESTION:
+        {user_question}
+
+        INSTRUCTIONS:
+
+        1. Answer clearly and naturally.
+        2. Use retrieved records as your source for transport facts.
+        3. Exact route matches may be used for route-specific answers.
+        4. Similar routes must NEVER be treated as exact routes.
+        5. If the requested route is unavailable, explain this.
+        6. Never invent schedules, prices, routes, journey durations
+           or service status.
+        7. If information is missing, state that it is unavailable.
+        8. Explain slang expressions when relevant.
+        9. If records conflict, explain that verification is needed.
+        10. Keep the response concise and easy to understand.
+        """
+
+    # 6. Generate response using Gemini
     for attempt in range(3):
 
         try:
@@ -471,7 +453,7 @@ def get_chatbot_response(user_question):
         except Exception as e:
 
             return f"An unexpected error occurred: {e}"
-        
+
 # ==========================================
 # 7. RUN CHATBOT IN TERMINAL
 # ==========================================
