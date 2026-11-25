@@ -24,34 +24,69 @@ slang_df = load_slang_dataset()
 
 import re
 
+
 def retrieve_travel_records(user_question, top_n=5):
+    question = user_question.lower()
+
+    # Identify the origin and destination
+    route_match = re.search(
+        r"from\s+(.+?)\s+to\s+(.+?)(?:\s+using\s+|\?|$)",
+        question
+    )
+
+    origin = ""
+    destination = ""
+
+    if route_match:
+        origin = route_match.group(1).strip()
+        destination = route_match.group(2).strip()
+
     stop_words = {
         "how", "what", "where", "when", "why", "who",
         "do", "does", "is", "are", "can", "could",
         "i", "you", "we", "the", "a", "an", "to",
         "from", "in", "on", "at", "for", "of", "and",
-        "me", "my", "please", "there", "get"
+        "me", "my", "please", "there", "get", "using"
     }
 
     question_words = set(
-        re.findall(r"\b\w+\b", user_question.lower())
+        re.findall(r"\b\w+\b", question)
     ) - stop_words
 
     scored_records = []
 
     for _, row in travel_df.iterrows():
-        record_text = " ".join([
-            str(row["query"]),
-            str(row["intent"]),
-            str(row["entities"]),
-            str(row["response"])
-        ]).lower()
+        record_query = str(row["query"]).lower()
 
         record_words = set(
-            re.findall(r"\b\w+\b", record_text)
+            re.findall(r"\b\w+\b", record_query)
         )
 
         score = len(question_words.intersection(record_words))
+
+        # Give higher priority to the exact route direction
+        
+        if origin and destination:
+            # Keep only records with the exact route direction
+            if f"from {origin} to {destination}" not in record_query:
+                continue
+
+            score += 20
+
+            # Match the requested transport type
+            transport_modes = ["train", "bus", "metro"]
+
+            requested_mode = next(
+                (mode for mode in transport_modes if mode in question_words),
+                None
+            )
+
+            if requested_mode:
+                if requested_mode not in record_query:
+                    continue
+
+                score += 10
+
 
         if score > 0:
             scored_records.append((score, row))
@@ -61,19 +96,24 @@ def retrieve_travel_records(user_question, top_n=5):
     return [row for score, row in scored_records[:top_n]]
 
 
+
 def retrieve_slang_records(user_question):
-    question_words = set(
-        re.findall(r"\b\w+\b", user_question.lower())
-    )
+    def normalize_text(text):
+        return re.sub(r"[^a-z0-9]", "", str(text).lower())
+
+    question_words = re.findall(r"[a-z0-9]+", user_question.lower())
 
     matched_slang = []
 
     for _, row in slang_df.iterrows():
-        keyword = str(row["keyword"]).lower()
+        keyword = str(row["keyword"]).strip()
 
-        # Check whether the slang appears in the question
-        if keyword in user_question.lower():
-            matched_slang.append(row)
+        normalized_keyword = normalize_text(keyword)
+
+        for word in question_words:
+            if normalize_text(word) == normalized_keyword:
+                matched_slang.append(row)
+                break
 
     return matched_slang
 
