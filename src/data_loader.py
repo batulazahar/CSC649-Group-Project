@@ -5,7 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 TRAVEL_DATASET_PATH = (
     BASE_DIR / "data" /
-    "TransitChat-Conversational_Route_and_Schedule_Dataset (1).csv"
+    "travel_dataset_verified.csv"
 )
 SLANG_DATASET_PATH = BASE_DIR / "data" / "genz_slang.csv"
 
