@@ -66,8 +66,22 @@
                     </div>
                 </div>
 
-                <div class="header-label">
-                    AI POWERED
+                <div class="header-actions">
+
+                    <div class="header-label">
+                        AI POWERED
+                    </div>
+
+                    <button class="settings-btn"
+                            id="settingsButton"
+                            type="button"
+                            title="Appearance Settings"
+                            aria-label="Open appearance settings">
+
+                        ⚙
+
+                    </button>
+
                 </div>
 
             </header>
@@ -148,6 +162,226 @@
         </main>
 
     </div>
+
+    <!-- Appearance Settings -->
+    <dialog class="settings-panel" id="settingsPanel"
+            aria-labelledby="settingsTitle">
+
+        <div class="settings-header">
+
+            <div>
+                <h2 id="settingsTitle">Appearance Settings</h2>
+                <p>Make TravelMate AI your own!</p>
+            </div>
+
+            <button id="closeSettings"
+                    class="close-settings"
+                    type="button"
+                    aria-label="Close settings">
+                ✕
+            </button>
+
+        </div>
+
+        <div class="settings-body">
+
+            <!-- Theme Settings -->
+            <section class="settings-section">
+
+                <h3>Theme</h3>
+                <p>Choose your preferred appearance.</p>
+
+                <div class="theme-options">
+
+                    <button class="theme-option"
+                            data-theme="light"
+                            type="button">
+                        <span>☀️</span>
+                        Light Mode
+                    </button>
+
+                    <button class="theme-option"
+                            data-theme="dark"
+                            type="button">
+                        <span>🌙</span>
+                        Dark Mode
+                    </button>
+
+                </div>
+
+            </section>
+
+            <!-- Bubble Colours -->
+            <section class="settings-section">
+
+                <h3>Message Bubble Colour</h3>
+                <p>Choose your favourite colour.</p>
+
+                <div class="colour-options">
+
+                    <button class="colour-option"
+                            data-colour="#6556CC"
+                            style="--swatch: #6556CC"
+                            aria-label="Original Purple"
+                            title="Original Purple">
+                    </button>
+
+                    <button class="colour-option"
+                            data-colour="#E6C9FA"
+                            style="--swatch: #E6C9FA"
+                            aria-label="Lavender"
+                            title="Lavender">
+                    </button>
+
+                    <button class="colour-option"
+                            data-colour="#F9C6D9"
+                            style="--swatch: #F9C6D9"
+                            aria-label="Pastel Pink"
+                            title="Pastel Pink">
+                    </button>
+
+                    <button class="colour-option"
+                            data-colour="#BCE5D5"
+                            style="--swatch: #BCE5D5"
+                            aria-label="Mint Green"
+                            title="Mint Green">
+                    </button>
+
+                    <button class="colour-option"
+                            data-colour="#C6DFFB"
+                            style="--swatch: #C6DFFB"
+                            aria-label="Baby Blue"
+                            title="Baby Blue">
+                    </button>
+
+                    <button class="colour-option"
+                            data-colour="#FFD8BC"
+                            style="--swatch: #FFD8BC"
+                            aria-label="Peach"
+                            title="Peach">
+                    </button>
+
+                    <button class="colour-option"
+                            data-colour="#F9EDB4"
+                            style="--swatch: #F9EDB4"
+                            aria-label="Butter Yellow"
+                            title="Butter Yellow">
+                    </button>
+
+                    <button class="colour-option"
+                            data-colour="#475569"
+                            style="--swatch: #475569"
+                            aria-label="Slate Grey"
+                            title="Slate Grey">
+                    </button>
+
+                </div>
+
+            </section>
+
+            <!-- Bubble Styles -->
+            <section class="settings-section">
+
+                <h3>Message Bubble Style</h3>
+                <p>Choose a style that matches your personality.</p>
+
+                <div class="bubble-options">
+
+                    <button class="bubble-option"
+                            data-bubble="rounded">
+                        <span class="mini-bubble rounded-preview">
+                            Hello!
+                        </span>
+                        Rounded
+                    </button>
+
+                    <button class="bubble-option"
+                            data-bubble="classic">
+                        <span class="mini-bubble classic-preview">
+                            Hello!
+                        </span>
+                        Classic
+                    </button>
+
+                    <button class="bubble-option"
+                            data-bubble="pill">
+                        <span class="mini-bubble pill-preview">
+                            Hello!
+                        </span>
+                        Pill
+                    </button>
+
+                    <button class="bubble-option"
+                            data-bubble="cloud">
+                        <span class="mini-bubble cloud-preview">
+                            Hi! ☁️
+                        </span>
+                        Fluffy Cloud
+                    </button>
+
+                    <button class="bubble-option"
+                            data-bubble="heart">
+                        <span class="mini-bubble heart-preview">
+                            Hi! ♡
+                        </span>
+                        Sweet Heart
+                    </button>
+
+                    <button class="bubble-option"
+                            data-bubble="star">
+                        <span class="mini-bubble star-preview">
+                            Hi! ✦
+                        </span>
+                        Starry
+                    </button>
+
+                    <button class="bubble-option"
+                            data-bubble="bear">
+                        <span class="mini-bubble bear-preview">
+                            Hi! 🧸
+                        </span>
+                        Teddy Bear
+                    </button>
+
+                </div>
+
+            </section>
+
+            <!-- Live Preview -->
+            <section class="settings-section">
+
+                <h3>Live Preview</h3>
+
+                <div class="appearance-preview">
+
+                    <div class="message user-message">
+                        <div class="message-content">
+                            Let's travel to Japan! 🌸
+                        </div>
+                    </div>
+
+                    <div class="message bot-message">
+                        <div class="message-content">
+                            Of course! Let's plan your dream trip together.
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- Reset Settings -->
+            <button class="reset-settings"
+                    id="resetSettings"
+                    type="button">
+
+                ↻ Reset to Default
+
+            </button>
+
+        </div>
+
+    </dialog>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
