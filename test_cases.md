@@ -30,12 +30,12 @@ This document describes the system test cases for the Travel Chatbot. The testin
 
 A total of eight (8) test cases were conducted to evaluate the Travel Chatbot system.
 
-All eight test cases passed, covering travel information retrieval, Gen Z slang detection, response generation, empty input handling, frontend functionality, and backend integration.
+All eight test cases passed, covering travel information retrieval, Gen Z slang detection, response generation, empty input handling, frontend functionality and backend integration.
 
 However, during the empty input test, the system prevented the submission of an empty message but did not display a warning or validation message to the user. This can be considered an area for future improvement.
 
 ## 5. Conclusion
 
-The system testing results indicate that the Travel Chatbot successfully performs its main functions. The chatbot was able to retrieve travel information, identify Gen Z slang, generate relevant responses, and communicate successfully with the Flask backend through the frontend interface.
+The system testing results indicate that the Travel Chatbot successfully performs its main functions. The chatbot was able to retrieve travel information, identify Gen Z slang, generate relevant responses and communicate successfully with the Flask backend through the frontend interface.
 
 Overall, the testing demonstrates that the core functionality and frontend-backend integration of the Travel Chatbot are working as expected.
