@@ -1,4 +1,3 @@
-
 import os
 import re
 import time
@@ -54,6 +53,7 @@ def retrieve_travel_records(user_question, top_n=5):
 
     question = user_question.lower()
 
+    
     # Step 1: Detect the user's intent
     if any(phrase in question for phrase in [
         "running", "operating", "service status",
@@ -65,39 +65,81 @@ def retrieve_travel_records(user_question, top_n=5):
     ]):
         detected_intent = "status_query"
 
-    
     elif any(phrase in question for phrase in [
-        "how do i get", "how to get", "directions",
-        "route", "way to", "travel from",
+        "what time", "when is", "next",
+        "departure", "depart", "schedule",
+        "timetable"
+    ]):
+        detected_intent = "schedule_query"
+
+    elif any(phrase in question for phrase in [
+        "how do i get", "how to get",
+        "how can i travel", "how do i travel",
+        "best way to travel", "best way to get",
+        "way to travel", "way to get",
+        "directions", "route", "travel from",
         "how long", "how much time",
         "how many minutes", "how many hours",
         "journey duration", "travel time",
-        "trip duration"
-    ]):
+        "trip duration", "time taken",
+        "reach"
+    ]) or (
+        re.search(r"\bfrom\b.+\bto\b", question)
+        or re.search(
+            r"\b[a-z]+\s+to\s+[a-z]+.*\b(train|bus|metro)\b",
+            question
+        )
+    ):
         detected_intent = "route_query"
-
-
-    elif any(phrase in question for phrase in [
-        "what time", "when is", "next", "departure",
-        "depart", "schedule", "timetable"
-    ]):
-        detected_intent = "schedule_query"
 
     else:
         detected_intent = None
 
+
+    
+    
     # Step 2: Extract origin and destination
+
+    origin = ""
+    destination = ""
+
+    # Pattern 1: From Brooklyn to Downtown
     route_match = re.search(
         r"from\s+(.+?)\s+to\s+(.+?)(?=\s+(?:using|by|running|operating|available|cancelled|canceled|delayed|today|tomorrow|next|this|on)\b|[?.!,]|$)",
         question
     )
 
-    origin = ""
-    destination = ""
-
     if route_match:
+
         origin = route_match.group(1).strip()
         destination = route_match.group(2).strip()
+
+    else:
+
+        # Pattern 2: Reach Downtown from Brooklyn
+        route_match = re.search(
+            r"reach\s+(.+?)\s+from\s+(.+?)(?=[?.!,]|$)",
+            question
+        )
+
+        if route_match:
+
+            destination = route_match.group(1).strip()
+            origin = route_match.group(2).strip()
+
+        else:
+
+            # Pattern 3: Brooklyn to Downtown by bus
+            route_match = re.search(
+                r"^(.+?)\s+to\s+(.+?)(?=\s+(?:using|by|running|operating|available|today|tomorrow|next|this|on)\b|[?.!,]|$)",
+                question
+            )
+
+            if route_match:
+
+                origin = route_match.group(1).strip()
+                destination = route_match.group(2).strip()
+
 
     # Step 3: Identify transport mode
     transport_modes = ["train", "bus", "metro"]
@@ -521,14 +563,31 @@ def get_chatbot_response(user_question):
                 f"Answer: {row['response']}\n\n"
             )
 
-                    # Check whether exact route records contain conflicting durations
+                    
+        # Check whether exact route records contain conflicting durations
         if exact_route_records:
 
-            durations = set()
+            durations_by_mode = {}
 
             for row in exact_route_records:
 
+                record_query = str(row["query"]).lower()
                 record_response = str(row["response"]).lower()
+
+                # Identify the transport mode
+                mode = next(
+                    (
+                        transport for transport in ["train", "bus", "metro"]
+                        if re.search(rf"\b{transport}\b", record_query)
+                    ),
+                    None
+                )
+
+                if not mode:
+                    continue
+
+                if mode not in durations_by_mode:
+                    durations_by_mode[mode] = set()
 
                 # Detect duration ranges, such as 38 to 61 minutes
                 duration_ranges = re.findall(
@@ -541,8 +600,13 @@ def get_chatbot_response(user_question):
 
                     multiplier = 60 if unit.startswith(("hour", "hr")) else 1
 
-                    durations.add(float(first_value) * multiplier)
-                    durations.add(float(second_value) * multiplier)
+                    durations_by_mode[mode].add(
+                        float(first_value) * multiplier
+                    )
+
+                    durations_by_mode[mode].add(
+                        float(second_value) * multiplier
+                    )
 
                 # Detect individual durations, such as 38 minutes
                 individual_durations = re.findall(
@@ -554,26 +618,41 @@ def get_chatbot_response(user_question):
 
                     multiplier = 60 if unit.startswith(("hour", "hr")) else 1
 
-                    durations.add(float(value) * multiplier)
+                    durations_by_mode[mode].add(
+                        float(value) * multiplier
+                    )
 
-            if len(durations) > 1:
+            # Check for conflicting durations within the same transport mode
+            conflicting_durations = {
+                mode: sorted(durations)
+                for mode, durations in durations_by_mode.items()
+                if len(durations) > 1
+            }
 
-                duration_list = sorted(durations)
+            if conflicting_durations:
 
-                duration_text = " and ".join(
-                    f"{value:g} minutes"
-                    for value in duration_list
-                )
+                conflict_messages = []
+
+                for mode, durations in conflicting_durations.items():
+
+                    duration_text = " and ".join(
+                        f"{value:g} minutes"
+                        for value in durations
+                    )
+
+                    conflict_messages.append(
+                        f"{mode.title()}: {duration_text}"
+                    )
 
                 return (
                     f"Based on the available dataset, the journey "
                     f"from {origin.title()} to {destination.title()} "
-                    f"has conflicting duration information: "
-                    f"{duration_text}.\n\n"
-                    f"The dataset contains inconsistent journey "
-                    f"durations for this route. Please verify the "
-                    f"actual travel time with the transport provider."
+                    f"contains conflicting duration information.\n\n"
+                    f"{chr(10).join(conflict_messages)}\n\n"
+                    f"Please verify the actual travel time with "
+                    f"the transport provider."
                 )
+
 
         prompt = f"""
         You are a helpful Travel Chatbot.
