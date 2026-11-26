@@ -1,6 +1,6 @@
 # Testing
 
-This folder contains testing resources for evaluating the chatbot's functionality and performance.
+This folder contains testing resources for evaluating the chatbot's functionality and response-time performance.
 
 ## 1. System Test Cases
 
@@ -47,6 +47,22 @@ This file contains automated tests for:
 python -m pytest tests/test_chatbot.py -v
 ```
 
+### Test Results
+
+The automated tests were executed successfully.
+
+- Total test cases: 3
+- Passed: 3
+- Failed: 0
+
+## 4. Additional Test Scripts
+
+Other testing scripts are available in the project root:
+- `test_chatbot_e2e.py`
+- `test_chatbot_stage5.py`
+- `test_gemini.py`
+
+Some tests may require a valid Gemini API key and an active internet connection.
 ### Test Results
 
 The automated tests were executed successfully.
