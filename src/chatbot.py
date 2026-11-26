@@ -222,31 +222,41 @@ def retrieve_travel_records(user_question, top_n=5):
 # 5. SLANG DATA RETRIEVAL
 # ==========================================
 
+
+
 def retrieve_slang_records(user_question):
 
     def normalize_text(text):
         return re.sub(
-            r"[^a-z0-9]",
-            "",
+            r"[^a-z0-9]+",
+            " ",
             str(text).lower()
-        )
+        ).strip()
 
-    question_words = re.findall(
-        r"[a-z0-9]+",
-        user_question.lower()
-    )
+    normalized_question = normalize_text(user_question)
+
+    slang_aliases = {
+        "cap": ["no cap"],
+        "main character": ["main character energy"]
+    }
 
     matched_slang = []
 
     for _, row in slang_df.iterrows():
 
-        keyword = str(row["keyword"]).strip()
+        keyword = normalize_text(row["keyword"])
 
-        normalized_keyword = normalize_text(keyword)
+        search_terms = [keyword]
 
-        for word in question_words:
+        if keyword in slang_aliases:
+            search_terms.extend(slang_aliases[keyword])
 
-            if normalize_text(word) == normalized_keyword:
+        for term in search_terms:
+
+            pattern = rf"\b{re.escape(term)}\b"
+
+            if re.search(pattern, normalized_question):
+
                 matched_slang.append(row)
                 break
 
@@ -256,8 +266,6 @@ def retrieve_slang_records(user_question):
 # ==========================================
 # 6. GENERATE CHATBOT RESPONSE
 # ==========================================
-
-
 
 def get_chatbot_response(user_question):
 
@@ -360,7 +368,31 @@ def get_chatbot_response(user_question):
         "canceled"
     ])
 
-    # 4. Decide which information source to use
+    
+    # 4. Handle direct slang questions using the dataset
+    slang_question = any(phrase in question for phrase in [
+        "what does",
+        "what is",
+        "what's",
+        "meaning",
+        "define",
+        "explain"
+    ])
+
+    if relevant_slang and slang_question and not transport_related:
+
+        slang_answers = []
+
+        for row in relevant_slang:
+
+            slang_answers.append(
+                f"{row['keyword']}: {row['description']}"
+            )
+
+        return "\n\n".join(slang_answers)
+
+
+    # 5. Decide which information source to use
 
     if not relevant_travel:
 
@@ -372,35 +404,66 @@ def get_chatbot_response(user_question):
                 "Please try another route or question."
             )
 
-        # General travel question: use Gemini knowledge
-        prompt = f"""
-        You are a friendly and helpful Travel Chatbot.
+        # Detect unknown slang definition questions
+        unknown_slang_question = bool(re.search(
+            r"\bwhat does\b.*\bmean\b"
+            r"|\bmeaning of\b"
+            r"|\bdefine\b",
+            question
+        ))
 
-        Answer the user's general travel question using
-        your general knowledge.
+        if unknown_slang_question:
 
-        You can help with:
-        - Tourist attractions
-        - Travel destinations
-        - Food recommendations
-        - Travel itineraries
-        - Travel tips
-        - Travel activities
+            # Gemini handles slang that is not available in the CSV
+            prompt = f"""
+            You are a friendly Gen Z slang assistant.
 
-        GEN Z SLANG INFORMATION:
-        {slang_context}
+            Explain the meaning of the slang word or phrase
+            in the user's question.
 
-        USER QUESTION:
-        {user_question}
+            USER QUESTION:
+            {user_question}
 
-        INSTRUCTIONS:
-        1. Give useful and relevant travel information.
-        2. Keep answers friendly and easy to understand.
-        3. Do not invent real-time information.
-        4. Do not invent transport schedules or service status.
-        5. Tell users to verify information that may change.
-        6. Explain slang expressions when relevant.
-        """
+            INSTRUCTIONS:
+            1. Explain the slang meaning clearly and accurately.
+            2. Use simple and easy-to-understand language.
+            3. Include one short example sentence.
+            4. Keep the response concise (2-4 sentences).
+            5. Do not provide travel recommendations or travel advice.
+            6. Do not discuss unrelated topics.
+            """
+
+        else:
+
+            # General travel question: use Gemini knowledge
+            prompt = f"""
+            You are a friendly and helpful Travel Chatbot.
+
+            Answer the user's general travel question using
+            your general knowledge.
+
+            You can help with:
+            - Tourist attractions
+            - Travel destinations
+            - Food recommendations
+            - Travel itineraries
+            - Travel tips
+            - Travel activities
+
+            GEN Z SLANG INFORMATION:
+            {slang_context}
+
+            USER QUESTION:
+            {user_question}
+
+            INSTRUCTIONS:
+            1. Give useful and relevant travel information.
+            2. Keep answers friendly and easy to understand.
+            3. Do not invent real-time information.
+            4. Do not invent transport schedules or service status.
+            5. Tell users to verify information that may change.
+            6. Explain slang expressions when relevant.
+            """
 
 
 
