@@ -10,6 +10,10 @@ from google.genai.errors import APIError
 
 from src.data_loader import load_travel_dataset, load_slang_dataset
 
+from src.currency_converter import (
+    convert_currency,
+    parse_currency_question
+)
 
 # ==========================================
 # 1. LOAD ENVIRONMENT VARIABLES
@@ -407,6 +411,8 @@ def retrieve_travel_records(user_question, top_n=5):
 # 5. SLANG DATA RETRIEVAL
 # ==========================================
 
+
+
 def retrieve_slang_records(user_question):
 
     # Step 1: Normalize text
@@ -418,6 +424,18 @@ def retrieve_slang_records(user_question):
 
     # Step 2: Normalize user's question
     question = normalize_text(user_question)
+        return re.sub(
+            r"[^a-z0-9]+",
+            " ",
+            str(text).lower()
+        ).strip()
+
+    normalized_question = normalize_text(user_question)
+
+    slang_aliases = {
+        "cap": ["no cap"],
+        "main character": ["main character energy"]
+    }
 
     matched_slang = []
     seen_keywords = set()
@@ -455,6 +473,21 @@ def retrieve_slang_records(user_question):
         key=lambda row: len(str(row["keyword"])),
         reverse=True
     )
+        keyword = normalize_text(row["keyword"])
+
+        search_terms = [keyword]
+
+        if keyword in slang_aliases:
+            search_terms.extend(slang_aliases[keyword])
+
+        for term in search_terms:
+
+            pattern = rf"\b{re.escape(term)}\b"
+
+            if re.search(pattern, normalized_question):
+
+                matched_slang.append(row)
+                break
 
     return matched_slang
 
@@ -464,6 +497,71 @@ def retrieve_slang_records(user_question):
 # ==========================================
 
 def get_chatbot_response(user_question):
+
+    # Check whether the question is a currency conversion request
+    currency_request = parse_currency_question(user_question)
+
+    # Detect incomplete currency conversion questions
+    currency_keywords = [
+        "convert",
+        "currency",
+        "exchange rate",
+        "how much",
+        "worth",
+        "change"
+    ]
+
+        # Detect unsupported three-letter currency codes
+    if not currency_request and re.search(
+        r"\b(?:convert|exchange)\b.*\b[A-Z]{3}\b.*\b(?:to|into)\b.*\b[A-Z]{3}\b",
+        user_question,
+        re.IGNORECASE
+    ):
+
+        return (
+            "Sorry, I couldn't recognise one or both of the "
+            "currency codes. Please check the currency codes "
+            "and try again.\n\n"
+            "For example: Convert 100 USD to MYR."
+        )
+
+    if not currency_request and any(
+        keyword in user_question.lower()
+        for keyword in currency_keywords
+    ):
+
+        if re.search(r"\d", user_question):
+
+            return (
+                "Sure! I can help you convert currencies. "
+                "Please specify both the original currency "
+                "and the target currency.\n\n"
+                "For example: Convert 100 USD to MYR."
+            )
+
+    if currency_request:
+
+        try:
+            result = convert_currency(
+                currency_request["amount"],
+                currency_request["from_currency"],
+                currency_request["to_currency"]
+            )
+
+            return (
+                f"{result['amount']:,.2f} "
+                f"{result['from_currency']} is equal to "
+                f"{result['converted_amount']:,.2f} "
+                f"{result['to_currency']}.\n"
+                f"Exchange rate: 1 {result['from_currency']} = "
+                f"{result['exchange_rate']} {result['to_currency']}.\n"
+                f"Rate date: {result['rate_date'] or 'Same currency'}.\n\n"
+                f"Note: This is a reference exchange rate, "
+                f"not necessarily the rate offered by banks or money changers."
+            )
+
+        except (ValueError, ConnectionError) as error:
+            return f"Sorry, I couldn't complete the currency conversion. {error}"
 
     # 1. Retrieve relevant information
     relevant_travel = retrieve_travel_records(user_question)
@@ -487,6 +585,126 @@ def get_chatbot_response(user_question):
         re.search(pattern, question)
         for pattern in sensitive_patterns
     )
+    question = user_question.lower()
+
+    # 3. Identify transport-related questions
+    transport_related = any(phrase in question for phrase in [
+        "how do i get",
+        "how to get",
+        "directions",
+        "route",
+        "travel from",
+        "train",
+        "bus",
+        "metro",
+        "timetable",
+        "schedule",
+        "departure",
+        "running",
+        "operating",
+        "delayed",
+        "cancelled",
+        "canceled"
+    ])
+
+    
+    # 4. Handle direct slang questions using the dataset
+    slang_question = any(phrase in question for phrase in [
+        "what does",
+        "what is",
+        "what's",
+        "meaning",
+        "define",
+        "explain"
+    ])
+
+    if relevant_slang and slang_question and not transport_related:
+
+        slang_answers = []
+
+        for row in relevant_slang:
+
+            slang_answers.append(
+                f"{row['keyword']}: {row['description']}"
+            )
+
+        return "\n\n".join(slang_answers)
+
+
+    # 5. Decide which information source to use
+
+    if not relevant_travel:
+
+        # Transport question without matching dataset records
+        if transport_related:
+            return (
+                "Sorry, I couldn't find matching transport "
+                "information in our dataset. "
+                "Please try another route or question."
+            )
+
+        # Detect unknown slang definition questions
+        unknown_slang_question = bool(re.search(
+            r"\bwhat does\b.*\bmean\b"
+            r"|\bmeaning of\b"
+            r"|\bdefine\b",
+            question
+        ))
+
+        if unknown_slang_question:
+
+            # Gemini handles slang that is not available in the CSV
+            prompt = f"""
+            You are a friendly Gen Z slang assistant.
+
+            Explain the meaning of the slang word or phrase
+            in the user's question.
+
+            USER QUESTION:
+            {user_question}
+
+            INSTRUCTIONS:
+            1. Explain the slang meaning clearly and accurately.
+            2. Use simple and easy-to-understand language.
+            3. Include one short example sentence.
+            4. Keep the response concise (2-4 sentences).
+            5. Do not provide travel recommendations or travel advice.
+            6. Do not discuss unrelated topics.
+            """
+
+        else:
+
+            # General travel question: use Gemini knowledge
+            prompt = f"""
+            You are a friendly and helpful Travel Chatbot.
+
+            Answer the user's general travel question using
+            your general knowledge.
+
+            You can help with:
+            - Tourist attractions
+            - Travel destinations
+            - Food recommendations
+            - Travel itineraries
+            - Travel tips
+            - Travel activities
+
+            GEN Z SLANG INFORMATION:
+            {slang_context}
+
+            USER QUESTION:
+            {user_question}
+
+            INSTRUCTIONS:
+            1. Give useful and relevant travel information.
+            2. Keep answers friendly and easy to understand.
+            3. Do not invent real-time information.
+            4. Do not invent transport schedules or service status.
+            5. Tell users to verify information that may change.
+            6. Explain slang expressions when relevant.
+            """
+
+
 
     if transport_related and sensitive_question:
 
@@ -515,6 +733,9 @@ def get_chatbot_response(user_question):
                 "schedule or service information. "
                 "Please check the official transport provider."
             )
+        exact_route_records = []
+
+        for row in relevant_travel:
 
         return (
             "Available dataset reference information:\n\n"
@@ -535,6 +756,83 @@ def get_chatbot_response(user_question):
     if not slang_context:
         slang_context = "No slang detected."
 
+            if origin and destination:
+                match_type = (
+                    "EXACT ROUTE MATCH"
+                    if exact_route
+                    else "SIMILAR ROUTE - NOT AN EXACT MATCH"
+                )
+
+            if exact_route:
+                exact_route_records.append(row)
+
+            else:
+                match_type = "RELEVANT RETRIEVED RECORD"
+
+            travel_context += (
+                f"Match Type: {match_type}\n"
+                f"Question: {row['query']}\n"
+                f"Intent: {row['intent']}\n"
+                f"Entities: {row['entities']}\n"
+                f"Answer: {row['response']}\n\n"
+            )
+
+                    # Check whether exact route records contain conflicting durations
+        if exact_route_records:
+
+            durations = set()
+
+            for row in exact_route_records:
+
+                record_response = str(row["response"]).lower()
+
+                # Detect duration ranges, such as 38 to 61 minutes
+                duration_ranges = re.findall(
+                    r"(\d+(?:\.\d+)?)\s*(?:to|-)\s*"
+                    r"(\d+(?:\.\d+)?)\s*(minutes?|mins?|hours?|hrs?)",
+                    record_response
+                )
+
+                for first_value, second_value, unit in duration_ranges:
+
+                    multiplier = 60 if unit.startswith(("hour", "hr")) else 1
+
+                    durations.add(float(first_value) * multiplier)
+                    durations.add(float(second_value) * multiplier)
+
+                # Detect individual durations, such as 38 minutes
+                individual_durations = re.findall(
+                    r"(\d+(?:\.\d+)?)\s*(minutes?|mins?|hours?|hrs?)",
+                    record_response
+                )
+
+                for value, unit in individual_durations:
+
+                    multiplier = 60 if unit.startswith(("hour", "hr")) else 1
+
+                    durations.add(float(value) * multiplier)
+
+            if len(durations) > 1:
+
+                duration_list = sorted(durations)
+
+                duration_text = " and ".join(
+                    f"{value:g} minutes"
+                    for value in duration_list
+                )
+
+                return (
+                    f"Based on the available dataset, the journey "
+                    f"from {origin.title()} to {destination.title()} "
+                    f"has conflicting duration information: "
+                    f"{duration_text}.\n\n"
+                    f"The dataset contains inconsistent journey "
+                    f"durations for this route. Please verify the "
+                    f"actual travel time with the transport provider."
+                )
+
+        prompt = f"""
+        You are a helpful Travel Chatbot.
 
     # 4. Prepare travel context
     travel_context = ""
@@ -596,6 +894,28 @@ def get_chatbot_response(user_question):
         - Do not invent real-time information.
         - Recommend verification when information may change.
         - Do not introduce unrelated transport records.
+        1. Answer clearly and naturally.
+        2. Use retrieved records as your source for transport facts.
+        3. Exact route matches may be used for route-specific answers.
+        4. Similar routes must NEVER be treated as exact routes.
+        5. If the requested route is unavailable, explain this.
+        6. Never invent schedules, prices, routes, journey durations
+           or service status.
+        7. If information is missing, state that it is unavailable.
+        8. Explain slang expressions when relevant.
+        9. If records conflict, explain that verification is needed.
+        10. Keep the response concise and easy to understand.
+
+        IMPORTANT RULES:
+        - Never invent travel conditions, reasons, or explanations
+          that are not explicitly stated in the retrieved records.
+        - Do not assume travel durations depend on morning,
+          afternoon, evening, or night unless the dataset says so.
+        - If multiple records provide different durations for the
+          same route, clearly report both durations.
+        - Explain that the retrieved records contain inconsistent
+          travel information.
+        - Do not create a reason to explain conflicting information.
         """
 
     # 6. Construct improved Gemini prompt
