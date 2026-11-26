@@ -9,6 +9,10 @@ from google.genai.errors import APIError
 
 from src.data_loader import load_travel_dataset, load_slang_dataset
 
+from src.currency_converter import (
+    convert_currency,
+    parse_currency_question
+)
 
 # ==========================================
 # 1. LOAD ENVIRONMENT VARIABLES
@@ -257,6 +261,71 @@ def retrieve_slang_records(user_question):
 
 def get_chatbot_response(user_question):
 
+    # Check whether the question is a currency conversion request
+    currency_request = parse_currency_question(user_question)
+
+    # Detect incomplete currency conversion questions
+    currency_keywords = [
+        "convert",
+        "currency",
+        "exchange rate",
+        "how much",
+        "worth",
+        "change"
+    ]
+
+        # Detect unsupported three-letter currency codes
+    if not currency_request and re.search(
+        r"\b(?:convert|exchange)\b.*\b[A-Z]{3}\b.*\b(?:to|into)\b.*\b[A-Z]{3}\b",
+        user_question,
+        re.IGNORECASE
+    ):
+
+        return (
+            "Sorry, I couldn't recognise one or both of the "
+            "currency codes. Please check the currency codes "
+            "and try again.\n\n"
+            "For example: Convert 100 USD to MYR."
+        )
+
+    if not currency_request and any(
+        keyword in user_question.lower()
+        for keyword in currency_keywords
+    ):
+
+        if re.search(r"\d", user_question):
+
+            return (
+                "Sure! I can help you convert currencies. "
+                "Please specify both the original currency "
+                "and the target currency.\n\n"
+                "For example: Convert 100 USD to MYR."
+            )
+
+    if currency_request:
+
+        try:
+            result = convert_currency(
+                currency_request["amount"],
+                currency_request["from_currency"],
+                currency_request["to_currency"]
+            )
+
+            return (
+                f"{result['amount']:,.2f} "
+                f"{result['from_currency']} is equal to "
+                f"{result['converted_amount']:,.2f} "
+                f"{result['to_currency']}.\n"
+                f"Exchange rate: 1 {result['from_currency']} = "
+                f"{result['exchange_rate']} {result['to_currency']}.\n"
+                f"Rate date: {result['rate_date'] or 'Same currency'}.\n\n"
+                f"Note: This is a reference exchange rate, "
+                f"not necessarily the rate offered by banks or money changers."
+            )
+
+        except (ValueError, ConnectionError) as error:
+            return f"Sorry, I couldn't complete the currency conversion. {error}"
+
     # 1. Retrieve relevant information
     relevant_travel = retrieve_travel_records(user_question)
     relevant_slang = retrieve_slang_records(user_question)
@@ -333,6 +402,8 @@ def get_chatbot_response(user_question):
         6. Explain slang expressions when relevant.
         """
 
+
+
     else:
 
         # 5. Dataset-based transport answers
@@ -349,6 +420,8 @@ def get_chatbot_response(user_question):
         if route_match:
             origin = route_match.group(1).strip()
             destination = route_match.group(2).strip()
+
+        exact_route_records = []
 
         for row in relevant_travel:
 
@@ -370,6 +443,10 @@ def get_chatbot_response(user_question):
                     if exact_route
                     else "SIMILAR ROUTE - NOT AN EXACT MATCH"
                 )
+
+            if exact_route:
+                exact_route_records.append(row)
+
             else:
                 match_type = "RELEVANT RETRIEVED RECORD"
 
@@ -380,6 +457,60 @@ def get_chatbot_response(user_question):
                 f"Entities: {row['entities']}\n"
                 f"Answer: {row['response']}\n\n"
             )
+
+                    # Check whether exact route records contain conflicting durations
+        if exact_route_records:
+
+            durations = set()
+
+            for row in exact_route_records:
+
+                record_response = str(row["response"]).lower()
+
+                # Detect duration ranges, such as 38 to 61 minutes
+                duration_ranges = re.findall(
+                    r"(\d+(?:\.\d+)?)\s*(?:to|-)\s*"
+                    r"(\d+(?:\.\d+)?)\s*(minutes?|mins?|hours?|hrs?)",
+                    record_response
+                )
+
+                for first_value, second_value, unit in duration_ranges:
+
+                    multiplier = 60 if unit.startswith(("hour", "hr")) else 1
+
+                    durations.add(float(first_value) * multiplier)
+                    durations.add(float(second_value) * multiplier)
+
+                # Detect individual durations, such as 38 minutes
+                individual_durations = re.findall(
+                    r"(\d+(?:\.\d+)?)\s*(minutes?|mins?|hours?|hrs?)",
+                    record_response
+                )
+
+                for value, unit in individual_durations:
+
+                    multiplier = 60 if unit.startswith(("hour", "hr")) else 1
+
+                    durations.add(float(value) * multiplier)
+
+            if len(durations) > 1:
+
+                duration_list = sorted(durations)
+
+                duration_text = " and ".join(
+                    f"{value:g} minutes"
+                    for value in duration_list
+                )
+
+                return (
+                    f"Based on the available dataset, the journey "
+                    f"from {origin.title()} to {destination.title()} "
+                    f"has conflicting duration information: "
+                    f"{duration_text}.\n\n"
+                    f"The dataset contains inconsistent journey "
+                    f"durations for this route. Please verify the "
+                    f"actual travel time with the transport provider."
+                )
 
         prompt = f"""
         You are a helpful Travel Chatbot.
@@ -409,6 +540,17 @@ def get_chatbot_response(user_question):
         8. Explain slang expressions when relevant.
         9. If records conflict, explain that verification is needed.
         10. Keep the response concise and easy to understand.
+
+        IMPORTANT RULES:
+        - Never invent travel conditions, reasons, or explanations
+          that are not explicitly stated in the retrieved records.
+        - Do not assume travel durations depend on morning,
+          afternoon, evening, or night unless the dataset says so.
+        - If multiple records provide different durations for the
+          same route, clearly report both durations.
+        - Explain that the retrieved records contain inconsistent
+          travel information.
+        - Do not create a reason to explain conflicting information.
         """
 
     # 6. Generate response using Gemini
