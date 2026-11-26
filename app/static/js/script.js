@@ -225,22 +225,64 @@ function showTypingIndicator() {
     const messageDiv = document.createElement("div");
 
     messageDiv.classList.add("message", "bot-message");
-
     messageDiv.classList.add("typing-message");
+
+    messageDiv.setAttribute("role", "status");
 
     const content = document.createElement("div");
 
     content.classList.add("message-content", "typing-indicator");
+    content.setAttribute("aria-hidden", "true");
 
+    // Create three animated dots
     for (let i = 0; i < 3; i++) {
 
         const dot = document.createElement("span");
 
         content.appendChild(dot);
-
     }
 
+    // Dynamic loading messages
+    const loadingTexts = [
+        "TravelMate AI is thinking...",
+        "Working on your request...",
+        "Preparing your travel assistance...",
+        "Generating your response...",
+        "Thank you for your patience..."
+    ];
+
+    let textIndex = 0;
+
+    // Create typing status text
+    const typingText = document.createElement("div");
+
+    typingText.classList.add("typing-text");
+
+    typingText.textContent = loadingTexts[textIndex];
+
+    // Change loading text every 2.5 seconds
+    const typingInterval = setInterval(() => {
+
+        if (textIndex < loadingTexts.length - 1) {
+
+            textIndex++;
+
+            typingText.textContent = loadingTexts[textIndex];
+
+        } else {
+
+            clearInterval(typingInterval);
+
+        }
+
+    }, 2500);
+
+    // Store interval for cleanup
+    messageDiv.typingInterval = typingInterval;
+
+    // Add animation and text
     messageDiv.appendChild(content);
+    messageDiv.appendChild(typingText);
 
     chatMessages.appendChild(messageDiv);
 
@@ -299,6 +341,7 @@ async function sendMessage(messageOverride = null) {
         const data = await response.json();
 
         // Remove typing indicator
+        clearInterval(loadingMessage.typingInterval);
         loadingMessage.remove();
 
         // Check API response
