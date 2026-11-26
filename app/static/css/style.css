@@ -111,11 +111,6 @@ body {
 
 .chat-history {
     margin-top: 40px;
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
 }
 
     .chat-history h3 {
@@ -123,19 +118,7 @@ body {
         letter-spacing: 1px;
         color: var(--text-light);
         margin-bottom: 20px;
-        flex-shrink: 0;
     }
-
-#historyList {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    flex: 1;
-    min-height: 0;
-    padding-right: 4px;
-}
 
 .history-empty {
     text-align: center;
@@ -152,15 +135,6 @@ body {
     .history-empty p {
         font-size: 13px;
     }
-
-#historyList::-webkit-scrollbar {
-    width: 4px;
-}
-
-#historyList::-webkit-scrollbar-thumb {
-    background: #D9D7E7;
-    border-radius: 10px;
-}
 
 /* Sidebar Footer */
 
@@ -538,14 +512,7 @@ body {
 @media (max-width: 550px) {
 
     .sidebar {
-        width: 220px;
-        min-width: 220px;
-        position: fixed;
-        left: 0;
-        top: 0;
-        height: 100vh;
-        z-index: 1000;
-        overflow-y: auto;
+        display: none;
     }
 
     .header-label {
@@ -677,126 +644,4 @@ body {
     .message-content h2:first-child,
     .message-content h3:first-child {
         margin-top: 0;
-    }
-
-
-
-/* Conversation Items */
-
-.history-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 10px;
-    background: #F5F5F5;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-    transition: 0.2s ease;
-    flex-shrink: 0;
-}
-
-    .history-item:hover {
-        background: #ECE8FF;
-    }
-
-    .history-item.active {
-        background: var(--primary);
-        color: white;
-    }
-
-.history-title {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.delete-chat {
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    color: inherit;
-    font-size: 14px;
-    padding: 5px 7px;
-    border-radius: 5px;
-    flex-shrink: 0;
-    opacity: 0.7;
-    transition: 0.2s ease;
-}
-
-    .delete-chat:hover {
-        background: rgba(0, 0, 0, 0.1);
-        opacity: 1;
-    }
-
-/* Delete Confirmation Modal */
-
-.modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(25, 25, 40, 0.45);
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    z-index: 1000;
-}
-
-    .modal-overlay.show {
-        display: flex;
-    }
-
-.delete-modal {
-    width: 100%;
-    max-width: 420px;
-    background: var(--white);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.18);
-}
-
-    .delete-modal h3 {
-        font-size: 18px;
-        margin-bottom: 12px;
-        color: var(--text-dark);
-    }
-
-    .delete-modal p {
-        font-size: 14px;
-        color: var(--text-light);
-        line-height: 1.6;
-    }
-
-.modal-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 24px;
-}
-
-    .modal-buttons button {
-        padding: 10px 16px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-.modal-cancel {
-    background: var(--white);
-    color: var(--text-dark);
-    border: 1px solid var(--border);
-}
-
-.modal-delete {
-    background: #D64545;
-    color: white;
-    border: 1px solid #D64545;
-}
-
-    .modal-delete:hover {
-        background: #B83232;
     }
