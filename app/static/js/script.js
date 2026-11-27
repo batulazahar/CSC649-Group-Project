@@ -331,6 +331,8 @@ async function sendMessage(messageOverride = null) {
         text: message
     });
 
+    saveConversation();
+
     if (
         currentConversation.title === "New Conversation"
     ) {
@@ -535,17 +537,310 @@ function saveConversation() {
     renderConversationList();
 }
 
+
+/* ==========================================
+   17. RESIZABLE + COLLAPSIBLE SIDEBAR
+========================================== */
+
+const sidebar = document.querySelector(".sidebar");
+const sidebarResizer = document.getElementById("sidebarResizer");
+const sidebarToggle = document.getElementById("sidebarToggle");
+
+const DEFAULT_SIDEBAR_WIDTH = 280;
+const MIN_SIDEBAR_WIDTH = 180;
+const MAX_SIDEBAR_WIDTH = 520;
+
+let isResizing = false;
+
+// ==========================
+// COLLAPSE / EXPAND
+// ==========================
+
+sidebarToggle.addEventListener("click", function(event) {
+
+    event.stopPropagation();
+
+    sidebar.classList.toggle("collapsed");
+
+    const collapsed =
+        sidebar.classList.contains("collapsed");
+
+    sidebarToggle.textContent =
+        collapsed ? "▶" : "◀";
+
+    localStorage.setItem(
+        "travelMateSidebarCollapsed",
+        collapsed
+    );
+
+});
+
+// ==========================
+// LOAD SIDEBAR WIDTH
+// ==========================
+
+function loadSidebarWidth() {
+
+    const savedWidth = Number(
+        localStorage.getItem(
+            "travelMateSidebarWidth"
+        )
+    );
+
+    const width =
+        Number.isFinite(savedWidth) &&
+            savedWidth >= MIN_SIDEBAR_WIDTH &&
+            savedWidth <= MAX_SIDEBAR_WIDTH
+            ? savedWidth
+            : DEFAULT_SIDEBAR_WIDTH;
+
+    document.documentElement.style.setProperty(
+        "--sidebar-width",
+        `${width}px`
+    );
+
+}
+
+// ==========================
+// LOAD COLLAPSED STATE
+// ==========================
+
+function loadSidebarState() {
+
+    const collapsed =
+        localStorage.getItem(
+            "travelMateSidebarCollapsed"
+        );
+
+    if (collapsed === "true") {
+
+        sidebar.classList.add("collapsed");
+
+        sidebarToggle.textContent = "▶";
+
+    } else {
+
+        sidebarToggle.textContent = "◀";
+
+    }
+}
+
+// ==========================
+// START RESIZING
+// ==========================
+
+sidebarResizer.addEventListener(
+    "pointerdown",
+    function(event) {
+
+        // Ignore drag if arrow button clicked
+
+        if (
+            event.target === sidebarToggle
+        ) {
+            return;
+        }
+
+        // Don't resize when collapsed
+
+        if (
+            sidebar.classList.contains(
+                "collapsed"
+            )
+        ) {
+            return;
+        }
+
+        if (window.innerWidth <= 550) {
+            return;
+        }
+
+        isResizing = true;
+
+        sidebarResizer.classList.add(
+            "dragging"
+        );
+
+        document.body.classList.add(
+            "sidebar-resizing"
+        );
+
+        sidebarResizer.setPointerCapture(
+            event.pointerId
+        );
+
+        event.preventDefault();
+
+    }
+);
+
+// ==========================
+// RESIZE SIDEBAR
+// ==========================
+
+function resizeSidebar(event) {
+
+    if (!isResizing) return;
+
+    const newWidth = Math.min(
+        MAX_SIDEBAR_WIDTH,
+        Math.max(
+            MIN_SIDEBAR_WIDTH,
+            event.clientX
+        )
+    );
+
+    document.documentElement.style.setProperty(
+        "--sidebar-width",
+        `${newWidth}px`
+    );
+
+    localStorage.setItem(
+        "travelMateSidebarWidth",
+        newWidth
+    );
+
+}
+
+sidebarResizer.addEventListener(
+    "pointermove",
+    resizeSidebar
+);
+
+// ==========================
+// STOP RESIZING
+// ==========================
+
+function stopResizing() {
+
+    isResizing = false;
+
+    sidebarResizer.classList.remove(
+        "dragging"
+    );
+
+    document.body.classList.remove(
+        "sidebar-resizing"
+    );
+
+}
+
+sidebarResizer.addEventListener(
+    "pointerup",
+    stopResizing
+);
+
+sidebarResizer.addEventListener(
+    "pointercancel",
+    stopResizing
+);
+
+// ==========================
+// DOUBLE CLICK = RESET WIDTH
+// ==========================
+
+sidebarResizer.addEventListener(
+    "dblclick",
+    function() {
+
+        document.documentElement.style.setProperty(
+            "--sidebar-width",
+            `${DEFAULT_SIDEBAR_WIDTH}px`
+        );
+
+        localStorage.setItem(
+            "travelMateSidebarWidth",
+            DEFAULT_SIDEBAR_WIDTH
+        );
+
+    }
+);
+
+// ==========================
+// KEYBOARD CONTROLS
+// ==========================
+
+sidebarResizer.addEventListener(
+    "keydown",
+    function(event) {
+
+        let width = parseInt(
+            getComputedStyle(
+                sidebar
+            ).width
+        );
+
+        if (event.key === "ArrowRight") {
+
+            width += 10;
+
+        } else if (
+            event.key === "ArrowLeft"
+        ) {
+
+            width -= 10;
+
+        } else if (
+            event.key === "Home"
+        ) {
+
+            width =
+                MIN_SIDEBAR_WIDTH;
+
+        } else if (
+            event.key === "End"
+        ) {
+
+            width =
+                MAX_SIDEBAR_WIDTH;
+
+        } else {
+
+            return;
+
+        }
+
+        event.preventDefault();
+
+        width = Math.min(
+            MAX_SIDEBAR_WIDTH,
+            Math.max(
+                MIN_SIDEBAR_WIDTH,
+                width
+            )
+        );
+
+        document.documentElement.style.setProperty(
+            "--sidebar-width",
+            `${width}px`
+        );
+
+        localStorage.setItem(
+            "travelMateSidebarWidth",
+            width
+        );
+
+    }
+);
+
+// ==========================
+// INITIALIZE
+// ==========================
+
+loadSidebarWidth();
+loadSidebarState();
+
 // ==========================================
 // 12. DISPLAY CONVERSATION LIST
 // ==========================================
 
+
 function renderConversationList() {
 
-    const list =
-        document.getElementById("conversationList");
+    const list = document.getElementById("conversationList");
+    const empty = document.getElementById("historyEmpty");
 
-    const empty =
-        document.getElementById("historyEmpty");
+    if (!list || !empty) return;
 
     list.innerHTML = "";
 
@@ -556,49 +851,74 @@ function renderConversationList() {
 
     empty.style.display = "none";
 
-    const sortedChats = [...chatHistory].sort(
-        (a, b) => {
+    const sortedChats = [...chatHistory].sort((a, b) => {
 
-            if (a.pinned && !b.pinned) return -1;
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
 
-            if (!a.pinned && b.pinned) return 1;
-
-            return b.id - a.id;
-        }
-    );
+        return b.id - a.id;
+    });
 
     sortedChats.forEach(chat => {
 
-        item.innerHTML = `
-    <span>${chat.pinned ? "📌" : ""} ${chat.title}</span>
+        const item = document.createElement("div");
 
-    <div class="history-actions">
+        // Match the existing CSS class
+        item.className = "history-item";
 
-        <button
-            class="pin-btn"
-            data-id="${chat.id}">
-            ${chat.pinned ? "📌" : "📍"}
-        </button>
+        if (String(chat.id) === String(currentConversation.id)) {
+            item.classList.add("active");
+        }
 
-        <button
-            class="delete-btn"
-            data-id="${chat.id}">
-            🗑
-        </button>
+        if (chat.pinned) {
+            item.classList.add("pinned");
+        }
 
-    </div>
-`;
+        // Conversation title
+        const title = document.createElement("span");
+        title.className = "history-title";
+        title.textContent = chat.title || "Untitled Conversation";
+        title.title = chat.title || "Untitled Conversation";
+
+        // Action buttons
+        const actions = document.createElement("div");
+        actions.className = "history-actions";
+
+        const pinButton = document.createElement("button");
+        pinButton.className = "pin-btn";
+        pinButton.dataset.id = chat.id;
+        pinButton.type = "button";
+        pinButton.title = chat.pinned ? "Unpin conversation" : "Pin conversation";
+        pinButton.setAttribute("aria-label", pinButton.title);
+        pinButton.textContent = chat.pinned ? "📌" : "📍";
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "delete-btn";
+        deleteButton.dataset.id = chat.id;
+        deleteButton.type = "button";
+        deleteButton.title = "Delete conversation";
+        deleteButton.setAttribute("aria-label", "Delete conversation");
+        deleteButton.textContent = "🗑";
+
+        actions.appendChild(pinButton);
+        actions.appendChild(deleteButton);
+
+        item.appendChild(title);
+        item.appendChild(actions);
 
         item.addEventListener("click", () => {
             loadConversation(chat.id);
         });
 
         list.appendChild(item);
+
     });
 
     attachDeleteEvents();
     attachPinEvents();
 }
+
+
 
 // ==========================================
 // 13. REOPEN PREVIOUS CONVERSATIONS

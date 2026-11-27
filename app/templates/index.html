@@ -20,6 +20,7 @@
         <aside class="sidebar">
 
             <div class="sidebar-brand">
+                
                 <div class="brand-icon">✈</div>
                 <div>
                     <h2>TravelMate AI</h2>
@@ -49,6 +50,22 @@
 
         </aside>
 
+        <!-- Sidebar Resize Handle -->
+        <div class="sidebar-resizer"
+             id="sidebarResizer"
+             role="separator"
+             aria-orientation="vertical"
+             tabindex="0">
+
+            <button id="sidebarToggle"
+                    class="sidebar-toggle-arrow"
+                    type="button">
+
+                ◀
+
+            </button>
+
+        </div>
 
         <!-- Main Chat Area -->
         <main class="main-chat">
@@ -382,33 +399,32 @@
             </button>
 
         </div>
+    </dialog>
 
-        <!-- Delete Confirmation Modal -->
-        <div id="deleteModal" class="modal-overlay hidden">
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-overlay hidden">
 
-            <div class="modal-content">
+        <div class="modal-content">
 
-                <h3>Delete Conversation?</h3>
+            <h3>Delete Conversation?</h3>
 
-                <p>
-                    This conversation will be permanently removed.
-                </p>
+            <p>
+                This conversation will be permanently removed.
+            </p>
 
-                <div class="modal-actions">
-                    <button id="cancelDelete" class="cancel-btn">
-                        Cancel
-                    </button>
+            <div class="modal-actions">
+                <button id="cancelDelete" class="cancel-btn">
+                    Cancel
+                </button>
 
-                    <button id="confirmDelete" class="delete-confirm-btn">
-                        Delete
-                    </button>
-                </div>
-
+                <button id="confirmDelete" class="delete-confirm-btn">
+                    Delete
+                </button>
             </div>
 
         </div>
-    </dialog>
 
+    </div>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </body>
