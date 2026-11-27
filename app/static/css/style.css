@@ -1185,28 +1185,289 @@ body[data-bubble="bear"] .message-content::after {
     color: white;
 }
 
-/*PIN CONVERSATION*/
+/* ==========================================
+   CONVERSATION LIST
+========================================== */
+
+#conversationList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    margin-top: 12px;
+}
+
+/* Conversation Item */
+
 .history-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
+    width: 100%;
+    min-width: 0;
+    padding: 11px 12px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
+
+/* Title */
+
+.history-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Hover */
+
+.history-item:hover {
+    background: var(--background);
+    border-color: rgba(101,86,204,0.12);
+}
+
+/* Active Conversation */
+
+.history-item.active {
+    background: var(--primary-light);
+    border-color: rgba(101,86,204,0.15);
+}
+
+    .history-item.active .history-title {
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+/* ==========================================
+   PINNED CONVERSATIONS
+========================================== */
+
+.history-item.pinned {
+    background: rgba(101,86,204,0.08);
+    border-left: 4px solid var(--primary);
+}
+
+    .history-item.pinned .history-title {
+        color: var(--primary);
+        font-weight: 700;
+    }
+
+    .history-item.pinned .pin-btn {
+        background: rgba(101,86,204,0.12);
+        border-radius: 6px;
+    }
+
+    /* Active + Pinned */
+
+    .history-item.pinned.active {
+        background: rgba(101,86,204,0.15);
+        border-left: 4px solid var(--primary);
+        border-color: rgba(101,86,204,0.25);
+    }
+
+        .history-item.pinned.active .history-title {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+/* ==========================================
+   ACTION BUTTONS
+========================================== */
 
 .history-actions {
     display: flex;
-    gap: 6px;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.history-item:hover .history-actions,
+.history-item:focus-within .history-actions,
+.history-item.active .history-actions {
+    opacity: 1;
 }
 
 .pin-btn,
 .delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
     border: none;
+    border-radius: 7px;
     background: transparent;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
+    transition: background 0.2s ease, transform 0.2s ease;
 }
 
-    .pin-btn:hover,
-    .delete-btn:hover {
-        transform: scale(1.1);
+    /* Pin */
+
+    .pin-btn:hover {
+        background: rgba(101,86,204,0.12);
+        transform: scale(1.05);
     }
+
+    /* Delete */
+
+    .delete-btn:hover {
+        background: rgba(239,68,68,0.12);
+        transform: scale(1.05);
+    }
+
+    .pin-btn:focus-visible,
+    .delete-btn:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+    }
+
+@media (hover:none) {
+
+    .history-actions {
+        opacity: 1;
+    }
+}
+
+/* ==========================================
+   RESIZABLE + COLLAPSIBLE SIDEBAR
+========================================== */
+
+:root {
+    --sidebar-width: 280px;
+}
+
+/* Sidebar */
+
+.sidebar {
+    width: var(--sidebar-width);
+    min-width: 180px;
+    max-width: 520px;
+    flex: 0 0 var(--sidebar-width);
+    overflow: hidden;
+    transition: width 0.25s ease, flex-basis 0.25s ease, padding 0.25s ease;
+}
+
+/* Main Chat */
+
+.main-chat {
+    flex: 1;
+    min-width: 0;
+    transition: all 0.25s ease;
+}
+
+/* Divider */
+
+.sidebar-resizer {
+    width: 12px;
+    flex: 0 0 12px;
+    position: relative;
+    cursor: col-resize;
+    transition: all 0.25s ease;
+}
+
+    /* Vertical Line */
+
+    .sidebar-resizer::after {
+        content: "";
+        position: absolute;
+        width: 2px;
+        height: 40px;
+        background: var(--border);
+        border-radius: 999px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        transition: background 0.2s ease;
+    }
+
+/* Arrow Button */
+
+.sidebar-toggle-arrow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--white);
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    z-index: 30;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    transition: all 0.2s ease;
+}
+
+    .sidebar-toggle-arrow:hover {
+        background: var(--primary-light);
+        transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    .sidebar-toggle-arrow:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+    }
+
+/* Divider Highlight */
+
+.sidebar-resizer:hover::after,
+.sidebar-resizer.dragging::after {
+    background: var(--primary);
+}
+
+/* Collapsed Sidebar */
+
+.sidebar.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    flex: 0 0 0 !important;
+    padding: 0;
+    border-right: none;
+}
+
+    /* Hide Content */
+
+    .sidebar.collapsed * {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* BUT NOT THE ARROW */
+
+    .sidebar.collapsed + .sidebar-resizer
+    .sidebar-toggle-arrow {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+/* Dragging */
+
+body.sidebar-resizing {
+    cursor: col-resize;
+    user-select: none;
+}
+
+/* Mobile */
+
+@media (max-width: 550px) {
+
+    .sidebar-resizer {
+        display: none;
+    }
+}
