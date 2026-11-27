@@ -213,8 +213,10 @@ def retrieve_travel_records(user_question, top_n=5):
     ]):
         detected_intent = "status_query"
 
+
     elif any(phrase in question for phrase in [
         "what time", "when is", "next",
+        "next train", "next bus", "next metro",
         "departure", "depart", "schedule",
         "timetable", "first train", "last train",
         "first bus", "last bus",
@@ -245,7 +247,6 @@ def retrieve_travel_records(user_question, top_n=5):
 
     else:
         detected_intent = None
-
 
 
 
@@ -467,23 +468,24 @@ def retrieve_travel_records(user_question, top_n=5):
 
 
 
+
 def retrieve_slang_records(user_question):
 
-    # Step 1: Normalize text
     def normalize_text(text):
         text = str(text).lower()
-        text = text.replace("Ã¢â‚¬â„¢", "'")
-        return re.sub(
-            r"[^a-z0-9]+",
-            " ",
-            text
-        ).strip()
+        text = text.replace("’", "'")
+        text = re.sub(r"[^a-z0-9]+", " ", text)
+        return re.sub(r"\s+", " ", text).strip()
 
     question = normalize_text(user_question)
 
+    slang_aliases = {
+        "cap": ["no cap"],
+        "main character": ["main character energy"]
+    }
+
     matched_slang = []
     seen_keywords = set()
-    remaining_question = question
 
     # Prioritise longer slang keywords
     sorted_slang = slang_df.sort_values(
@@ -492,7 +494,7 @@ def retrieve_slang_records(user_question):
         ascending=False
     )
 
-    # Step 2: Match slang keywords and phrases
+    # Match slang keywords and phrases
     for _, row in sorted_slang.iterrows():
 
         keyword = normalize_text(row["keyword"])
@@ -500,19 +502,26 @@ def retrieve_slang_records(user_question):
         if not keyword or keyword in seen_keywords:
             continue
 
-        pattern = rf"(?<!\w){re.escape(keyword)}(?!\w)"
+        search_terms = [keyword]
 
-        if re.search(pattern, remaining_question):
-            matched_slang.append(row)
-            seen_keywords.add(keyword)
-
-            remaining_question = re.sub(
-                pattern,
-                lambda match: " " * len(match.group()),
-                remaining_question
+        if keyword in slang_aliases:
+            search_terms.extend(
+                normalize_text(term)
+                for term in slang_aliases[keyword]
             )
 
-    # Step 3: Prioritise longer slang phrases
+        for term in search_terms:
+
+            if not term:
+                continue
+
+            pattern = rf"(?<!\w){re.escape(term)}(?!\w)"
+
+            if re.search(pattern, question):
+                matched_slang.append(row)
+                seen_keywords.add(keyword)
+                break
+
     matched_slang.sort(
         key=lambda row: len(str(row["keyword"])),
         reverse=True
@@ -521,24 +530,30 @@ def retrieve_slang_records(user_question):
     return matched_slang
 
 
+
 # ==========================================
 # 6. GENERATE CHATBOT RESPONSE
 # ==========================================
 
 def get_chatbot_response(user_question):
+    if not user_question or not user_question.strip():
+        return "You didn't include a question. Please enter your question."
     # Check whether the question is a currency conversion request.
     currency_request = parse_currency_question(user_question)
+
+
+    # Detect incomplete currency conversion questions
+
 
     currency_keywords = [
         "convert",
         "currency",
         "exchange rate",
-        "how much",
         "worth",
-        "change"
+        "money changer"
     ]
 
-    # Detect unsupported three-letter currency codes.
+    # Detect unsupported three-letter currency codes
     if not currency_request and re.search(
         r"\b(?:convert|exchange)\b.*\b[A-Z]{3}\b.*\b(?:to|into)\b.*\b[A-Z]{3}\b",
         user_question,
@@ -591,7 +606,7 @@ def get_chatbot_response(user_question):
     relevant_travel = retrieve_travel_records(user_question)
     relevant_slang = retrieve_slang_records(user_question)
 
-    # 2. Identify the question type and build the slang context.
+
     transport_related = is_transport_question(user_question)
     question = normalize_travel_question(user_question)
 
@@ -608,6 +623,79 @@ def get_chatbot_response(user_question):
         for pattern in sensitive_patterns
     )
 
+
+
+
+
+    # 4. Handle direct slang questions using the dataset
+    slang_question = any(phrase in question for phrase in [
+        "what does",
+        "what is",
+        "what's",
+        "meaning",
+        "define",
+        "explain"
+    ])
+
+    if relevant_slang and slang_question and not transport_related:
+
+        slang_answers = []
+
+        for row in relevant_slang:
+
+            slang_answers.append(
+                f"{row['keyword']}: {row['description']}"
+            )
+
+        return "\n\n".join(slang_answers)
+
+
+
+
+
+
+    if transport_related and sensitive_question:
+
+        if not relevant_travel:
+            return (
+                "Sorry, matching schedule or service information "
+                "is not available in our travel dataset. "
+                "Please check the official transport provider "
+                "for accurate and up-to-date information."
+            )
+
+        reference_answers = []
+
+        for row in relevant_travel:
+            answer = str(row["response"]).strip()
+
+            if answer and answer.lower() not in [
+                "nan", "none", "null"
+            ]:
+                if answer not in reference_answers:
+                    reference_answers.append(answer)
+
+        if not reference_answers:
+            return (
+                "The matching records do not contain usable "
+                "schedule or service information. "
+                "Please check the official transport provider."
+            )
+
+
+
+
+        return (
+            "Available dataset reference information:\n\n"
+            + "\n".join(reference_answers)
+            + "\n\nNote: This information is from our dataset "
+            "and is not verified real-time information. "
+            "Please confirm with the official transport provider."
+        )
+
+
+    # 3. Prepare slang context
+
     slang_context = ""
     for row in relevant_slang:
         slang_context += (
@@ -617,41 +705,51 @@ def get_chatbot_response(user_question):
     if not slang_context:
         slang_context = "No matching slang records."
 
-    # 3. Handle transport questions that have no matching dataset records.
-    if transport_related and not relevant_travel:
-        return (
-            "Sorry, I couldn't find matching transport information "
-            "in our dataset. Please try another route or question. "
-            "For the latest schedules and service updates, check "
-            "the official transport provider."
-        )
 
-    # 4. For schedules and service status, only return retrieved data.
-    # Do not let Gemini guess time-sensitive transport information.
-    if transport_related and sensitive_question:
-        reference_answers = []
+    # 4. Prepare travel context
+    exact_route_records = []
+    travel_context = ""
 
-        for row in relevant_travel:
-            answer = str(row["response"]).strip()
+    for row in relevant_travel:
 
-            if answer and answer.lower() not in ["nan", "none", "null"]:
-                if answer not in reference_answers:
-                    reference_answers.append(answer)
+        entities = row["entities"]
 
-        if not reference_answers:
-            return (
-                "The matching records do not contain usable schedule "
-                "or service information. Please check the official "
-                "transport provider for the latest updates."
+        if isinstance(entities, str):
+            try:
+                entities = ast.literal_eval(entities)
+            except (ValueError, SyntaxError):
+                entities = {}
+
+        if not isinstance(entities, dict):
+            entities = {}
+
+        origin = entities.get("source")
+        destination = entities.get("destination")
+
+        exact_route = bool(origin and destination)
+        if exact_route:
+            exact_route_records.append(row)
+
+        if origin and destination:
+            match_type = (
+                "EXACT ROUTE MATCH"
+                if exact_route
+                else "SIMILAR ROUTE - NOT AN EXACT MATCH"
+
             )
+        else:
+            match_type = "RELEVANT RETRIEVED RECORD"
 
-        return (
-            "Here's what I found in our travel dataset:\n\n"
-            + "\n".join(reference_answers)
-            + "\n\nJust a heads-up: this is reference information "
-            "from our dataset, not verified real-time information. "
-            "Please confirm with the official transport provider."
+        travel_context += (
+            f"Match Type: {match_type}\n"
+            f"Question: {row['query']}\n"
+            f"Intent: {row['intent']}\n"
+            f"Entities: {row['entities']}\n"
+            f"Answer: {row['response']}\n\n"
         )
+
+
+
 
     # 5. Check for conflicting journey durations on an exact route.
     # retrieve_travel_records() returns exact-route matches when a
@@ -767,7 +865,7 @@ def get_chatbot_response(user_question):
         travel_context = "No matching travel records."
 
     # Detect slang definition questions, including terms in and outside the CSV.
-        slang_definition_question = bool(re.search(
+    slang_definition_question = bool(re.search(
         r"\bwhat does\b|\bwhat is\b|\bwhat's\b"
         r"|\bmeaning\b|\bdefine\b|\bexplain\b",
         question
