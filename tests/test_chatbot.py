@@ -35,3 +35,13 @@ def test_chatbot_response():
     assert answer is not None
     assert isinstance(answer, str)
     assert len(answer) > 0
+
+# TC04: Test empty user input
+def test_empty_user_input():
+    question = ""
+
+    answer = get_chatbot_response(question)
+
+    assert answer is not None
+    assert isinstance(answer, str)
+    assert "didn't include a question" in answer.lower()
