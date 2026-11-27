@@ -7,6 +7,20 @@ const userInput = document.getElementById("userInput");
 const sendButton = document.getElementById("sendButton");
 const chatMessages = document.getElementById("chatMessages");
 
+// ==========================================
+// CHAT HISTORY
+// ==========================================
+
+let chatHistory = JSON.parse(
+    localStorage.getItem("travelMateHistory")
+) || [];
+
+let currentConversation = {
+    id: Date.now(),
+    title: "New Conversation",
+    messages: [],
+    pinned: false
+};
 
 // ==========================================
 // 2. FORMAT INLINE MARKDOWN SAFELY
@@ -312,6 +326,19 @@ async function sendMessage(messageOverride = null) {
     // Display user's message
     displayMessage(message, "user-message");
 
+    currentConversation.messages.push({
+        sender: "user",
+        text: message
+    });
+
+    if (
+        currentConversation.title === "New Conversation"
+    ) {
+        currentConversation.title =
+            message.substring(0, 30) +
+            (message.length > 30 ? "..." : "");
+    }
+
     // Clear input
     userInput.value = "";
 
@@ -360,6 +387,13 @@ async function sendMessage(messageOverride = null) {
                 data.response,
                 "bot-message"
             );
+
+            currentConversation.messages.push({
+                sender: "bot",
+                text: data.response
+            });
+
+            saveConversation();
 
         } else {
 
@@ -463,15 +497,295 @@ if (newChatButton) {
 
     newChatButton.addEventListener("click", function () {
 
-        // Reload the homepage to start a fresh conversation
-        window.location.reload();
+        chatMessages.innerHTML = "";
+
+        currentConversation = {
+            id: Date.now(),
+            title: "New Conversation",
+            messages: [],
+            pinned: false
+        };
+
+        renderConversationList();
 
     });
 
 }
 
 // ==========================================
-// 11. APPEARANCE SETTINGS
+// 11. SAVE CONVERSATIONS
+// ==========================================
+function saveConversation() {
+
+    const index = chatHistory.findIndex(
+        chat => chat.id === currentConversation.id
+    );
+
+    if (index === -1) {
+        chatHistory.unshift(currentConversation);
+    } else {
+        chatHistory[index] = currentConversation;
+    }
+
+    localStorage.setItem(
+        "travelMateHistory",
+        JSON.stringify(chatHistory)
+    );
+
+    renderConversationList();
+}
+
+// ==========================================
+// 12. DISPLAY CONVERSATION LIST
+// ==========================================
+
+function renderConversationList() {
+
+    const list =
+        document.getElementById("conversationList");
+
+    const empty =
+        document.getElementById("historyEmpty");
+
+    list.innerHTML = "";
+
+    if (chatHistory.length === 0) {
+        empty.style.display = "block";
+        return;
+    }
+
+    empty.style.display = "none";
+
+    const sortedChats = [...chatHistory].sort(
+        (a, b) => {
+
+            if (a.pinned && !b.pinned) return -1;
+
+            if (!a.pinned && b.pinned) return 1;
+
+            return b.id - a.id;
+        }
+    );
+
+    sortedChats.forEach(chat => {
+
+        item.innerHTML = `
+    <span>${chat.pinned ? "📌" : ""} ${chat.title}</span>
+
+    <div class="history-actions">
+
+        <button
+            class="pin-btn"
+            data-id="${chat.id}">
+            ${chat.pinned ? "📌" : "📍"}
+        </button>
+
+        <button
+            class="delete-btn"
+            data-id="${chat.id}">
+            🗑
+        </button>
+
+    </div>
+`;
+
+        item.addEventListener("click", () => {
+            loadConversation(chat.id);
+        });
+
+        list.appendChild(item);
+    });
+
+    attachDeleteEvents();
+    attachPinEvents();
+}
+
+// ==========================================
+// 13. REOPEN PREVIOUS CONVERSATIONS
+// ==========================================
+function loadConversation(id) {
+
+    const chat =
+        chatHistory.find(
+            c => String(c.id) === String(id)
+        );
+
+    if (!chat) return;
+
+    currentConversation = chat;
+
+    chatMessages.innerHTML = "";
+
+    chat.messages.forEach(msg => {
+
+        displayMessage(
+            msg.text,
+            msg.sender === "user"
+                ? "user-message"
+                : "bot-message"
+        );
+
+    });
+
+    renderConversationList();
+}
+
+// ==========================================
+// 14. DELETE CONVERSATIONS
+// ==========================================
+
+// Store conversation waiting to be deleted
+let deleteConversationId = null;
+
+// Modal elements
+const deleteModal =
+    document.getElementById("deleteModal");
+
+const confirmDelete =
+    document.getElementById("confirmDelete");
+
+const cancelDelete =
+    document.getElementById("cancelDelete");
+
+// Open delete confirmation modal
+function showDeleteModal(id) {
+
+    deleteConversationId = id;
+
+    deleteModal.classList.remove("hidden");
+}
+
+// Close modal
+function closeDeleteModal() {
+
+    deleteModal.classList.add("hidden");
+
+    deleteConversationId = null;
+}
+
+// Confirm delete button
+confirmDelete.addEventListener("click", function () {
+
+    if (!deleteConversationId) return;
+
+    chatHistory = chatHistory.filter(
+        chat => String(chat.id) !== String(deleteConversationId)
+    );
+
+    // If current chat was deleted,
+    // create a fresh conversation
+    if (
+        String(currentConversation.id) ===
+        String(deleteConversationId)
+    ) {
+
+        chatMessages.innerHTML = "";
+
+        currentConversation = {
+            id: Date.now(),
+            title: "New Conversation",
+            messages: [],
+            pinned: false
+        };
+    }
+
+    localStorage.setItem(
+        "travelMateHistory",
+        JSON.stringify(chatHistory)
+    );
+
+    renderConversationList();
+
+    closeDeleteModal();
+});
+
+// Cancel button
+cancelDelete.addEventListener("click", function () {
+
+    closeDeleteModal();
+});
+
+// Close when clicking outside modal
+deleteModal.addEventListener("click", function (event) {
+
+    if (event.target === deleteModal) {
+
+        closeDeleteModal();
+
+    }
+
+});
+
+// Attach delete button events to conversation list
+function attachDeleteEvents() {
+
+    document
+        .querySelectorAll(".delete-btn")
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                function (event) {
+
+                    event.stopPropagation();
+
+                    showDeleteModal(
+                        this.dataset.id
+                    );
+
+                }
+            );
+
+        });
+
+}
+
+// ==========================================
+// 15. PIN MESSAGES
+// ==========================================
+function togglePin(id) {
+
+    const chat = chatHistory.find(
+        c => String(c.id) === String(id)
+    );
+
+    if (!chat) return;
+
+    chat.pinned = !chat.pinned;
+
+    localStorage.setItem(
+        "travelMateHistory",
+        JSON.stringify(chatHistory)
+    );
+
+    renderConversationList();
+}
+
+//ATTACH PIN BUTTON EVENTS TO CONVERSATION LIST
+function attachPinEvents() {
+
+    document
+        .querySelectorAll(".pin-btn")
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                function (event) {
+
+                    event.stopPropagation();
+
+                    togglePin(
+                        this.dataset.id
+                    );
+
+                }
+            );
+
+        });
+
+}
+// ==========================================
+// 16. APPEARANCE SETTINGS
 // ==========================================
 
 const settingsButton = document.getElementById("settingsButton");
@@ -741,3 +1055,4 @@ resetSettings.addEventListener("click", () => {
 // Initialize Appearance Settings
 
 loadAppearance();
+renderConversationList();

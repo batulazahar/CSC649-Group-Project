@@ -34,10 +34,12 @@
             <div class="chat-history">
                 <h3>RECENT CONVERSATIONS</h3>
 
-                <div class="history-empty">
+                <div id="historyEmpty" class="history-empty">
                     <span>💬</span>
                     <p>No conversations yet</p>
                 </div>
+
+                <div id="conversationList"></div>
             </div>
 
             <div class="sidebar-footer">
@@ -381,6 +383,30 @@
 
         </div>
 
+        <!-- Delete Confirmation Modal -->
+        <div id="deleteModal" class="modal-overlay hidden">
+
+            <div class="modal-content">
+
+                <h3>Delete Conversation?</h3>
+
+                <p>
+                    This conversation will be permanently removed.
+                </p>
+
+                <div class="modal-actions">
+                    <button id="cancelDelete" class="cancel-btn">
+                        Cancel
+                    </button>
+
+                    <button id="confirmDelete" class="delete-confirm-btn">
+                        Delete
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
     </dialog>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>

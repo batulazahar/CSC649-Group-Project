@@ -1110,3 +1110,103 @@ body[data-bubble="bear"] .message-content::after {
         animation: none;
     }
 }
+
+/* HIGHLIGHT CURRENT CHAT*/
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    background: var(--background);
+}
+
+    .history-item.active {
+        background: var(--primary-light);
+        border-left: 4px solid var(--primary);
+        font-weight: 600;
+    }
+
+/*delete message confirmation popup*/
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: white;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+}
+
+    .modal-content h3 {
+        margin-bottom: 10px;
+    }
+
+    .modal-content p {
+        color: var(--text-light);
+        margin-bottom: 20px;
+    }
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.cancel-btn,
+.delete-confirm-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.cancel-btn {
+    background: #E5E7EB;
+}
+
+.delete-confirm-btn {
+    background: #EF4444;
+    color: white;
+}
+
+/*PIN CONVERSATION*/
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.history-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.pin-btn,
+.delete-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+    .pin-btn:hover,
+    .delete-btn:hover {
+        transform: scale(1.1);
+    }
