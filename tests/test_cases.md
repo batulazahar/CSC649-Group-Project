@@ -56,6 +56,15 @@ Command used:
 
 \## Testing Results
 
+## Manual Testing Results
+
+| Test ID | Test Description | Test Input | Actual Result | Status |
+|---|---|---|---|---|
+| MT01 | Currency conversion | Currency conversion questions | Currency conversion completed successfully. | PASSED |
+| MT02 | Known slang detection | What does G.O.A.T. mean? | Correct slang meaning retrieved. | PASSED |
+| MT03 | Unknown slang handling | What does rizz mean? | Gemini provided a slang explanation. | PASSED |
+| MT04 | Travel fallback | How do I travel from Kuala Lumpur to Penang using train? | Gemini provided general travel guidance. | PASSED |
+
 
 
 \- Total test cases: 4
