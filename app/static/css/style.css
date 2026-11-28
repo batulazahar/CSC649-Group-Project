@@ -1847,6 +1847,55 @@ body.sidebar-resizing {
             color: var(--text-light);
         }
 
+/* =========================================
+   ENHANCED CHAT INPUT - AUTO EXPANDING
+
+.input-wrapper {
+    align-items: flex-end;
+}
+
+    .input-wrapper textarea {
+        flex: 1;
+        width: 100%;
+        min-width: 0;
+        min-height: 44px;
+        max-height: 160px;
+        padding: 12px 15px;
+        border: none;
+        outline: none;
+        resize: none;
+        font-family: inherit;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--text-dark);
+        background: transparent;
+        overflow-y: hidden;
+        box-sizing: border-box;
+    }
+
+        .input-wrapper textarea::placeholder {
+            color: var(--text-light);
+        }
+
+    .input-wrapper #sendButton {
+        flex-shrink: 0;
+        min-height: 44px;
+    }
+
+    /* Textarea scrollbar */
+
+    .input-wrapper textarea::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .input-wrapper textarea::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 10px;
+    }
+
+    .input-wrapper textarea::-webkit-scrollbar-track {
+        background: transparent;
+}
 /* Login section */
 
 .login-prompt {
@@ -1889,7 +1938,6 @@ body.sidebar-resizing {
 
 /* ==========================================
    LOGGED IN USER PANEL
-========================================== */
 
 .user-profile-card {
     display: flex;
