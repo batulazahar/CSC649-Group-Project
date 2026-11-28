@@ -2771,3 +2771,175 @@ body[data-theme="dark"] {
     font-size: 12px;
     font-weight: 600;
 }
+
+/* ==========================================
+   AI MESSAGE ACTION BUTTONS
+========================================== */
+
+.message-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 12px;
+    padding: 5px 0;
+    opacity: 0.85;
+    transition: opacity 0.2s ease;
+}
+
+.message-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: #85889a;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+    /* Outline icons */
+
+    .message-action svg {
+        width: 17px;
+        height: 17px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        transition: transform 0.2s ease;
+    }
+
+    /* Hover effect */
+
+    .message-action:hover {
+        background: #f0efff;
+        border-color: #e4e1ff;
+        color: #6256d9;
+        transform: translateY(-2px);
+    }
+
+        .message-action:hover svg {
+            transform: scale(1.08);
+        }
+
+    /* Selected state */
+
+    .message-action.action-active {
+        background: #eeecff;
+        border-color: #dcd7ff;
+        color: #6256d9;
+    }
+
+    /* Disabled state */
+
+    .message-action:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Keyboard accessibility */
+
+    .message-action:focus-visible {
+        outline: 2px solid #8175ed;
+        outline-offset: 2px;
+    }
+
+/* Mobile responsiveness */
+
+@media (max-width: 600px) {
+    .message-actions {
+        gap: 3px;
+    }
+
+    .message-action {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+
+/* ==========================================
+   TRAVELMATE TOAST NOTIFICATION
+========================================== */
+
+.travelmate-toast {
+    position: fixed;
+    bottom: 35px;
+    left: 50%;
+    transform: translate(-50%, 20px);
+    padding: 13px 22px;
+    background: #28263a;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 12px;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    visibility: hidden;
+    z-index: 9999;
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+    /* Show notification */
+
+    .travelmate-toast.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, 0);
+    }
+
+/* Dark mode */
+
+body[data-theme="dark"] .travelmate-toast {
+    background: #f0efff;
+    color: #28263a;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+
+    .travelmate-toast {
+        bottom: 25px;
+        max-width: calc(100% - 40px);
+        font-size: 12px;
+        padding: 12px 18px;
+    }
+}
+
+
+/* ==========================================
+   COPY SUCCESS TOAST NOTIFICATION
+========================================== */
+
+.travelmate-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translate(-50%, 20px);
+    background: #252333;
+    color: #ffffff;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    visibility: hidden;
+    z-index: 99999;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+}
+
+    .travelmate-toast.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, 0);
+    }
