@@ -1988,7 +1988,7 @@ if (loginButton) {
 
 /* =========================================
    CHAT INPUT - COUNTER AND VALIDATION
-
+   ========================================= */
 const characterCounter =
     document.getElementById("characterCounter");
 
@@ -2189,9 +2189,9 @@ function displayDestinations(index) {
         `).join("");
 }
 
-// ==========================================
-// CLICKABLE DESTINATION CARDS
-// ==========================================
+/* ==========================================
+    CLICKABLE DESTINATION CARDS
+ ==========================================*/
 
 const destinationCards = document.getElementById("destinationCards");
 
@@ -2270,7 +2270,7 @@ newChatBtn.addEventListener("click", function () {
 
 /* =========================================
    VOICE INPUT - SPEECH TO TEXT
-
+   ========================================= */
 const voiceButton =
     document.getElementById("voiceButton");
 
