@@ -987,6 +987,248 @@ body[data-bubble="bear"] .message-content::after {
 }
 
 /* =========================================
+   12. SIDEBAR NAVIGATION
+========================================= */
+
+.sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: width 0.25s ease, padding 0.25s ease, transform 0.25s ease;
+}
+
+.workspace-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 24px;
+    margin-bottom: 24px;
+}
+
+.sidebar-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--text-light);
+    margin-bottom: 10px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    background: transparent;
+    color: var(--text-dark);
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+    .nav-item:hover {
+        background: var(--primary-light);
+        color: var(--primary);
+    }
+
+    .nav-item.active {
+        background: var(--primary-light);
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+.nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    flex-shrink: 0;
+    font-size: 18px;
+}
+
+.nav-text {
+    white-space: nowrap;
+}
+
+.sidebar-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid var(--border);
+}
+/* Sidebar Toggle Button */
+
+.sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+    .sidebar-toggle:hover {
+        background: var(--border);
+    }
+
+    .sidebar-toggle:focus-visible,
+    .nav-item:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 3px;
+    }
+
+.sidebar-overlay {
+    display: none;
+}
+/* Collapsed Desktop Sidebar */
+
+@media (min-width: 769px) {
+
+    .sidebar.collapsed {
+        width: 72px;
+        padding: 18px 10px;
+    }
+
+        .sidebar.collapsed .nav-text,
+        .sidebar.collapsed .sidebar-section-title,
+        .sidebar.collapsed .brand-text,
+        .sidebar.collapsed .recent-conversations,
+        .sidebar.collapsed .sidebar-footer,
+        .sidebar.collapsed .new-chat-text {
+            display: none;
+        }
+
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
+            padding: 12px 0;
+        }
+
+        .sidebar.collapsed .brand {
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .new-chat-btn {
+            justify-content: center;
+            padding: 12px 0;
+        }
+}
+/* =========================================
+   13. RESPONSIVE SIDEBAR
+========================================= */
+
+.main-chat {
+    min-width: 0;
+    min-height: 0;
+}
+
+.header-info {
+    min-width: 0;
+}
+
+.header-actions {
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+
+    .sidebar,
+    .sidebar.collapsed {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: min(280px, 85vw);
+        height: 100vh;
+        height: 100dvh;
+        z-index: 1000;
+        transform: translateX(-100%);
+        visibility: hidden;
+        overflow-y: auto;
+    }
+
+        .sidebar.open {
+            transform: translateX(0);
+            visibility: visible;
+        }
+
+    .sidebar-overlay.active {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+
+    .main-chat {
+        width: 100%;
+    }
+
+    .chat-header {
+        gap: 10px;
+        padding: 12px 15px;
+    }
+
+    .chat-messages {
+        min-height: 0;
+        padding: 20px 15px;
+    }
+
+    .message-content {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+}
+
+@media (max-width: 550px) {
+
+    .assistant-avatar,
+    .header-label {
+        display: none;
+    }
+
+    .chat-header h2 {
+        font-size: 15px;
+    }
+
+    .chat-header p {
+        font-size: 11px;
+    }
+
+    .header-info {
+        gap: 8px;
+    }
+
+    .sidebar-toggle {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .sidebar,
+    .nav-item,
+    .sidebar-toggle {
+        transition: none;
+    }
+}
+
+/* =========================================
    EXTRA CHAT FUNCTIONALITY
 ========================================= */
 
@@ -1470,4 +1712,125 @@ body.sidebar-resizing {
     .sidebar-resizer {
         display: none;
     }
+}
+
+/* ==========================================
+   SIDEBAR SCROLL AND SPACING FIX
+========================================== */
+
+.sidebar {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    padding: 18px 16px;
+}
+
+/* Fixed branding and navigation */
+
+.sidebar-brand,
+.new-chat-btn,
+.workspace-nav {
+    flex-shrink: 0;
+}
+
+.sidebar-brand {
+    margin-bottom: 18px;
+}
+
+.workspace-nav {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    gap: 3px;
+}
+
+    .workspace-nav .nav-item {
+        min-height: 36px;
+        padding: 7px 10px;
+    }
+
+/* Recent Conversations container */
+
+.chat-history {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    margin-top: 12px;
+    margin-bottom: 8px;
+}
+
+    /* Keep conversation heading visible */
+
+    .chat-history h3 {
+        flex-shrink: 0;
+        margin-bottom: 8px;
+    }
+
+/* Only conversation list can scroll */
+
+#conversationList {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-top: 0;
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
+}
+
+    #conversationList .history-item {
+        flex-shrink: 0;
+    }
+
+/* Empty conversation state */
+
+.history-empty {
+    padding: 10px 5px;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Fixed quick settings */
+
+.sidebar-settings {
+    flex-shrink: 0;
+    margin-top: 0;
+    padding-top: 8px;
+    padding-bottom: 4px;
+}
+
+    .sidebar-settings .nav-item {
+        min-height: 36px;
+        padding: 7px 10px;
+    }
+
+/* Fixed sidebar footer */
+
+.sidebar-footer {
+    flex-shrink: 0;
+    margin-top: 0;
+    padding: 8px 5px;
+}
+
+/* Conversation scrollbar design */
+
+#conversationList::-webkit-scrollbar {
+    width: 4px;
+}
+
+#conversationList::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+}
+
+#conversationList::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Preserve existing collapsed sidebar */
+
+.sidebar.collapsed {
+    padding: 0;
 }
