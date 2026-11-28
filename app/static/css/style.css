@@ -1850,8 +1850,7 @@ body.sidebar-resizing {
 
 /* =========================================
    ENHANCED CHAT INPUT - AUTO EXPANDING
-=========================================*/
-
+========================================== */
 .input-wrapper {
     align-items: flex-end;
 }
@@ -2005,8 +2004,7 @@ body.sidebar-resizing {
 
 /* =========================================
    CHAT INPUT - COUNTER AND VALIDATION
-========================================= */
-
+    ========================================== */
 .character-counter {
     flex-shrink: 0;
     align-self: flex-end;
@@ -2065,7 +2063,7 @@ body.sidebar-resizing {
 
 /* ==========================================
    ROTATING TRAVEL RECOMMENDATIONS
-==========================================*/
+========================================== */
 
 .destination-section {
     max-width: 950px;
@@ -2199,9 +2197,7 @@ body.sidebar-resizing {
 
 /* ==========================================
    TRAVELMATE UI POLISH OVERRIDES
-    ==========================================*/
-
-/*Keep this section at the very bottom.*/
+    ========================================== */
 
 :root {
     --primary: #5B5BD6;
@@ -2616,8 +2612,7 @@ body[data-bubble="bear"] .message-content::after {
 
 /* =========================================
    14. DARK MODE COMPLETION FIX
- ==========================================*/
-/*Keep all interface surfaces readable in dark mode.*/
+    ================================ */
 
 body[data-theme="dark"] {
     background: var(--background);
@@ -2836,8 +2831,7 @@ body[data-theme="dark"] {
 
 /* ==========================================
    AI MESSAGE ACTION BUTTONS
- ==========================================*/
-
+========================================== */
 .message-actions {
     display: flex;
     align-items: center;
@@ -2928,8 +2922,7 @@ body[data-theme="dark"] {
 
 /* ==========================================
    TRAVELMATE TOAST NOTIFICATION
-==========================================*/
-
+========================================== */
 .travelmate-toast {
     position: fixed;
     bottom: 35px;
@@ -2980,7 +2973,7 @@ body[data-theme="dark"] .travelmate-toast {
 
 /* ==========================================
    COPY SUCCESS TOAST NOTIFICATION
-==========================================*/
+========================================== */
 .travelmate-toast {
     position: fixed;
     bottom: 30px;
@@ -3067,3 +3060,26 @@ body[data-theme="dark"] .travelmate-toast {
         animation: none;
     }
 }
+
+.input-wrapper #voiceButton {
+    padding: 0;
+    background: var(--primary-light);
+    color: var(--primary);
+    flex: 0 0 40px;
+}
+
+    .input-wrapper #voiceButton svg {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+    }
+
+    .input-wrapper #voiceButton:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .input-wrapper #voiceButton.listening {
+        background: #EF4444;
+        color: white;
+    }
