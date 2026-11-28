@@ -52,14 +52,12 @@ google = oauth.register(
 # ==========================================
 # 1. DISPLAY HOMEPAGE
 # ==========================================
-
 @app.route("/")
 def home():
-
- return render_template(
-     "index.html",
-     user=session.get("user")
- )
+    return render_template(
+        "index.html",
+        user=session.get("user")
+    )
 
 
 # ==========================================

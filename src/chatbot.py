@@ -3,6 +3,8 @@ import os
 import re
 import time
 
+from .budget_monitoring import get_budget_summary, check_budget_status
+
 from difflib import get_close_matches
 from dotenv import load_dotenv
 from google import genai
@@ -891,6 +893,38 @@ def get_chatbot_response(user_question, user_id=None):
             )
         except (ValueError, ConnectionError) as error:
             return f"Sorry, I couldn't complete the currency conversion. {error}"
+
+    
+    
+    # Check whether the user is asking about travel budget.
+    budget_keywords = [
+        "budget",
+        "spending",
+        "remaining money",
+        "remaining budget",
+        "money left",
+        "how much have i spent"
+    ]
+
+    if any(keyword in user_question.lower() for keyword in budget_keywords):
+
+        if not user_id:
+            return "Please log in to check your travel budget."
+
+        summary = get_budget_summary(user_id)
+
+        if summary is None:
+            return "You have not set a travel budget yet."
+
+        return (
+            "Here is your travel budget summary:\n\n"
+            f"Total Budget: RM {summary['total_budget']:,.2f}\n"
+            f"Total Expenses: RM {summary['total_expenses']:,.2f}\n"
+            f"Remaining Budget: RM {summary['remaining_budget']:,.2f}\n"
+            f"Budget Used: {summary['budget_used_percentage']:.2f}%\n\n"
+            f"{check_budget_status(user_id)}"
+        )
+
 
     # ==========================================
     # EXPENSE RECORDING
