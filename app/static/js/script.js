@@ -6,6 +6,7 @@
 const userInput = document.getElementById("userInput");
 const sendButton = document.getElementById("sendButton");
 const chatMessages = document.getElementById("chatMessages");
+const historySearch = document.getElementById("historySearch");
 
 // ==========================================
 // CHAT HISTORY
@@ -21,6 +22,9 @@ let currentConversation = {
     messages: [],
     pinned: false
 };
+
+let conversationSearch = "";
+
 
 // ==========================================
 // 2. FORMAT INLINE MARKDOWN SAFELY
@@ -490,7 +494,7 @@ suggestionCards.forEach((card, index) => {
 
 
 // ==========================================
-// 10. NEW CHAT BUTTON
+// 9. NEW CHAT BUTTON
 // ==========================================
 
 const newChatButton = document.querySelector(".new-chat-btn");
@@ -515,7 +519,7 @@ if (newChatButton) {
 }
 
 // ==========================================
-// 11. SAVE CONVERSATIONS
+// 10. SAVE CONVERSATIONS
 // ==========================================
 function saveConversation() {
 
@@ -539,7 +543,7 @@ function saveConversation() {
 
 
 /* ==========================================
-   17. RESIZABLE + COLLAPSIBLE SIDEBAR
+   11. RESIZABLE + COLLAPSIBLE SIDEBAR
 ========================================== */
 
 const sidebar = document.querySelector(".sidebar");
@@ -844,20 +848,57 @@ function renderConversationList() {
 
     list.innerHTML = "";
 
-    if (chatHistory.length === 0) {
-        empty.style.display = "block";
-        return;
-    }
-
     empty.style.display = "none";
 
-    const sortedChats = [...chatHistory].sort((a, b) => {
+    const filteredChats =
+        chatHistory.filter(chat => {
 
-        if (a.pinned && !b.pinned) return -1;
-        if (!a.pinned && b.pinned) return 1;
+            if (!conversationSearch) {
+                return true;
+            }
 
-        return b.id - a.id;
-    });
+            const title =
+                (chat.title || "")
+                    .toLowerCase();
+
+            const messageContent =
+                chat.messages
+                    .map(msg => msg.text)
+                    .join(" ")
+                    .toLowerCase();
+
+            return (
+                title.includes(conversationSearch) ||
+                messageContent.includes(conversationSearch)
+            );
+
+        });
+
+    const sortedChats =
+        [...filteredChats].sort((a, b) => {
+
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+
+            return b.id - a.id;
+
+        });
+
+    if (sortedChats.length === 0) {
+        empty.style.display = "block";
+
+        empty.innerHTML =
+            conversationSearch
+                ? `
+            <span>🔍</span>
+            <p>No matching conversations found</p>
+          `
+                : `
+            <span>💬</span>
+            <p>No conversations yet</p>
+          `;
+        return;
+    }
 
     sortedChats.forEach(chat => {
 
@@ -1503,3 +1544,24 @@ sidebarThemeObserver.observe(document.body, {
 });
 
 updateQuickThemeButton();
+
+// search history functionality
+
+if (historySearch) {
+
+    historySearch.addEventListener(
+        "input",
+        function () {
+
+            conversationSearch =
+                this.value
+                    .trim()
+                    .toLowerCase();
+
+            renderConversationList();
+
+        }
+    );
+
+}
+
