@@ -347,6 +347,7 @@ async function sendMessage(messageOverride = null) {
 
     // Clear input
     userInput.value = "";
+    resizeChatInput();
 
     // Disable button while waiting
     sendButton.disabled = true;
@@ -1565,3 +1566,28 @@ if (historySearch) {
 
 }
 
+/* =========================================
+   ENHANCED CHAT INPUT - AUTO EXPANDING
+========================================= */
+
+function resizeChatInput() {
+    userInput.style.height = "auto";
+
+    const maxInputHeight = 160;
+
+    const requiredHeight = userInput.scrollHeight;
+
+    userInput.style.height =
+        Math.min(requiredHeight, maxInputHeight) + "px";
+
+    userInput.style.overflowY =
+        requiredHeight > maxInputHeight
+            ? "auto"
+            : "hidden";
+}
+
+// Resize whenever the user types
+userInput.addEventListener("input", resizeChatInput);
+
+// Set initial textarea height
+resizeChatInput();
