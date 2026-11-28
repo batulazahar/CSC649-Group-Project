@@ -860,9 +860,7 @@ suggestionCards.forEach((card, index) => {
 const newChatButton = document.querySelector(".new-chat-btn");
 
 if (newChatButton) {
-
-    newChatButton.addEventListener("click", function () {
-
+    newChatButton.addEventListener("click", function() {
         chatMessages.innerHTML = "";
 
         currentConversation = {
@@ -872,11 +870,12 @@ if (newChatButton) {
             pinned: false
         };
 
+        showDestinationRecommendations(); // Show destination cards again
+
         renderConversationList();
-
     });
-
 }
+
 
 // ==========================================
 // 10. SAVE CONVERSATIONS
@@ -930,7 +929,7 @@ sidebarToggle.addEventListener("click", function(event) {
         sidebar.classList.contains("collapsed");
 
     sidebarToggle.textContent =
-        collapsed ? "â–¶" : "â—€";
+        collapsed ? "▶" : "◀";
 
     localStorage.setItem(
         "travelMateSidebarCollapsed",
@@ -980,11 +979,11 @@ function loadSidebarState() {
 
         sidebar.classList.add("collapsed");
 
-        sidebarToggle.textContent = "â–¶";
+        sidebarToggle.textContent = "▶";
 
     } else {
 
-        sidebarToggle.textContent = "â—€";
+        sidebarToggle.textContent = "◀";
 
     }
 }
@@ -1250,13 +1249,14 @@ function renderConversationList() {
         empty.innerHTML =
             conversationSearch
                 ? `
-            <span>ðŸ”</span>
-            <p>No matching conversations found</p>
-          `
+                <span>🔍</span>
+                <p>No matching conversations found</p>
+              `
                 : `
-            <span>ðŸ’¬</span>
-            <p>No conversations yet</p>
-          `;
+                <span>💬</span>
+                <p>No conversations yet</p>
+              `;
+
         return;
     }
 
@@ -1291,7 +1291,7 @@ function renderConversationList() {
         pinButton.type = "button";
         pinButton.title = chat.pinned ? "Unpin conversation" : "Pin conversation";
         pinButton.setAttribute("aria-label", pinButton.title);
-        pinButton.textContent = chat.pinned ? "ðŸ“Œ" : "ðŸ“";
+        pinButton.textContent = chat.pinned ? "📌" : "📍";
 
         const deleteButton = document.createElement("button");
         deleteButton.className = "delete-btn";
@@ -1299,7 +1299,7 @@ function renderConversationList() {
         deleteButton.type = "button";
         deleteButton.title = "Delete conversation";
         deleteButton.setAttribute("aria-label", "Delete conversation");
-        deleteButton.textContent = "ðŸ—‘";
+        deleteButton.textContent = "🗑️";
 
         actions.appendChild(pinButton);
         actions.appendChild(deleteButton);
@@ -1863,7 +1863,7 @@ function updateQuickThemeButton() {
         document.body.dataset.theme === "dark";
 
     quickThemeIcon.textContent =
-        isDark ? "â˜€" : "â˜¾";
+        isDark ? "☀" : "☾";
 
     quickThemeText.textContent =
         isDark ? "Light Mode" : "Dark Mode";
@@ -1988,6 +1988,7 @@ if (loginButton) {
 
 /* =========================================
    CHAT INPUT - COUNTER AND VALIDATION
+==========================================*/
 
 const characterCounter =
     document.getElementById("characterCounter");
@@ -2189,17 +2190,19 @@ function displayDestinations(index) {
         `).join("");
 }
 
+
 // ==========================================
 // CLICKABLE DESTINATION CARDS
 // ==========================================
 
 const destinationCards = document.getElementById("destinationCards");
 
-destinationCards.addEventListener("click", function (event) {
+destinationCards.addEventListener("click", function(event) {
 
     const selectedCard = event.target.closest(".destination-card");
 
-    if (!selectedCard || sendButton.disabled) {
+    // Only check whether another message is being sent
+    if (!selectedCard || isChatSending) {
         return;
     }
 
@@ -2215,6 +2218,7 @@ Please recommend the best places to visit in ${country}.
     sendMessage(prompt);
 
 });
+
 
 function changeDestination(index) {
 
@@ -2256,7 +2260,6 @@ function showDestinationRecommendations() {
     startDestinationRotation();
 }
 
-const newChatBtn = document.getElementById("newChatButton");
 
 newChatBtn.addEventListener("click", function () {
 
@@ -2270,7 +2273,7 @@ newChatBtn.addEventListener("click", function () {
 
 /* =========================================
    VOICE INPUT - SPEECH TO TEXT
-
+==========================================*/
 const voiceButton =
     document.getElementById("voiceButton");
 
