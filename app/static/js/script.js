@@ -100,19 +100,24 @@ function renderMarkdown(container, text) {
 
     function flushParagraph() {
 
-        if (paragraph.length === 0) return;
+    if (paragraph.length === 0) return;
 
-        const p = document.createElement("p");
+    const p = document.createElement("p");
 
-        formatInlineText(
-            paragraph.join(" "),
-            p
-        );
+    paragraph.forEach((line, index) => {
 
-        container.appendChild(p);
+        if (index > 0) {
+            p.appendChild(document.createElement("br"));
+        }
 
-        paragraph = [];
-    }
+        formatInlineText(line, p);
+
+    });
+
+    container.appendChild(p);
+
+    paragraph = [];
+}
 
     function flushList() {
 
@@ -130,7 +135,6 @@ function renderMarkdown(container, text) {
         if (!trimmed) {
 
             flushParagraph();
-            flushList();
 
             return;
         }
@@ -158,7 +162,7 @@ function renderMarkdown(container, text) {
         const bulletMatch = trimmed.match(/^[-*]\s+(.+)$/);
 
         // Numbered lists
-        const numberedMatch = trimmed.match(/^\d+[.)]\s+(.+)$/);
+        const numberedMatch = trimmed.match(/^(\d+)[.)]\s+(.+)$/);
 
         if (bulletMatch || numberedMatch) {
 
@@ -177,11 +181,15 @@ function renderMarkdown(container, text) {
             const li = document.createElement("li");
 
             formatInlineText(
-                bulletMatch ? bulletMatch[1] : numberedMatch[1],
+                bulletMatch ? bulletMatch[1] : numberedMatch[2],
                 li
             );
 
-            currentList.appendChild(li);
+            if (numberedMatch) {
+                li.value = Number(numberedMatch[1]);
+            }
+
+currentList.appendChild(li);
 
             return;
         }

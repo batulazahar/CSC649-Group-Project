@@ -66,6 +66,7 @@ def home():
 # 2. CHATBOT API
 # ==========================================
 
+
 @app.route("/chat", methods=["POST"])
 def chat():
 
@@ -87,7 +88,12 @@ def chat():
 
     try:
 
-        bot_response = get_chatbot_response(user_message)
+        user_id = session.get("user", {}).get("id")
+
+        bot_response = get_chatbot_response(
+            user_message,
+            user_id=user_id
+        )
 
         return jsonify({
             "response": bot_response
@@ -98,6 +104,7 @@ def chat():
         return jsonify({
             "error": str(e)
         }), 500
+
 
 
 # ==========================================
@@ -124,11 +131,10 @@ def auth():
     user_info = token["userinfo"]
 
     session["user"] = {
-
+        "id": user_info["sub"],
         "name": user_info["name"],
         "email": user_info["email"],
         "picture": user_info["picture"]
-
     }
 
     return redirect("/")
