@@ -17,3 +17,6 @@ venv/
 
 # System files
 .DS_Store
+
+# Local expense database
+expenses.db
