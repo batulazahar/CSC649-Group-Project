@@ -17,10 +17,10 @@
     <div class="chat-container">
 
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="chatSidebar">
 
             <div class="sidebar-brand">
-                
+
                 <div class="brand-icon">✈</div>
                 <div>
                     <h2>TravelMate AI</h2>
@@ -28,10 +28,76 @@
                 </div>
             </div>
 
-            <button class="new-chat-btn" type="button">
-                <span>＋</span> New Chat
+            <button class="new-chat-btn"
+                    id="newChatButton"
+                    aria-label="New Chat"
+                    title="New Chat">
+
+                <span class="new-chat-icon">+</span>
+                <span class="new-chat-text">New Chat</span>
+
             </button>
 
+            <!-- Workspace Navigation -->
+            <nav class="workspace-nav" aria-label="Workspace navigation">
+
+                <p class="sidebar-section-title">WORKSPACE</p>
+
+                <button type="button"
+                        class="nav-item active"
+                        data-section="assistant"
+                        title="AI Assistant">
+
+                    <span class="nav-icon">✦</span>
+                    <span class="nav-text">AI Assistant</span>
+
+                </button>
+
+                <button type="button"
+                        class="nav-item"
+                        data-section="budget"
+                        data-prompt="Help me plan my travel budget."
+                        title="Plan My Budget">
+
+                    <span class="nav-icon">💰</span>
+                    <span class="nav-text">Plan My Budget</span>
+
+                </button>
+
+                <button type="button"
+                        class="nav-item"
+                        data-section="expenses"
+                        data-prompt="Help me track my travel expenses."
+                        title="Track Expenses">
+
+                    <span class="nav-icon">🧾</span>
+                    <span class="nav-text">Track Expenses</span>
+
+                </button>
+
+                <button type="button"
+                        class="nav-item"
+                        data-section="monitor"
+                        data-prompt="Help me monitor my travel budget."
+                        title="Monitor Budget">
+
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Monitor Budget</span>
+
+                </button>
+
+                <button type="button"
+                        class="nav-item"
+                        data-section="currency"
+                        data-prompt="Help me convert foreign currencies."
+                        title="Currency Conversion">
+
+                    <span class="nav-icon">💱</span>
+                    <span class="nav-text">Currency Conversion</span>
+
+                </button>
+
+            </nav>
             <div class="chat-history">
                 <h3>RECENT CONVERSATIONS</h3>
 
@@ -42,14 +108,38 @@
 
                 <div id="conversationList"></div>
             </div>
+            <!-- Sidebar Quick Settings -->
+            <div class="sidebar-settings">
 
+                <button type="button"
+                        class="nav-item"
+                        id="sidebarSettingsButton"
+                        title="Appearance Settings">
+
+                    <span class="nav-icon">⚙</span>
+                    <span class="nav-text">Appearance</span>
+
+                </button>
+
+                <button type="button"
+                        class="nav-item"
+                        id="quickThemeButton"
+                        title="Switch theme">
+
+                    <span class="nav-icon" id="quickThemeIcon">☾</span>
+                    <span class="nav-text" id="quickThemeText">
+                        Dark Mode
+                    </span>
+
+                </button>
+
+            </div>
             <div class="sidebar-footer">
                 <span>✈</span>
                 <p>Plan smarter. Travel further.</p>
             </div>
 
         </aside>
-
         <!-- Sidebar Resize Handle -->
         <div class="sidebar-resizer"
              id="sidebarResizer"
@@ -59,10 +149,9 @@
 
             <button id="sidebarToggle"
                     class="sidebar-toggle-arrow"
-                    type="button">
-
+                    type="button"
+                    aria-label="Collapse or expand sidebar">
                 ◀
-
             </button>
 
         </div>
@@ -74,6 +163,7 @@
             <header class="chat-header">
 
                 <div class="header-info">
+                    
                     <div class="assistant-avatar">✈</div>
 
                     <div>

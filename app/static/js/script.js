@@ -1376,3 +1376,130 @@ resetSettings.addEventListener("click", () => {
 
 loadAppearance();
 renderConversationList();
+
+// ==========================================
+// 12. WORKSPACE NAVIGATION
+// ==========================================
+
+const workspaceItems =
+    document.querySelectorAll(
+        ".workspace-nav .nav-item"
+    );
+
+workspaceItems.forEach((item) => {
+
+    item.addEventListener("click", () => {
+
+        workspaceItems.forEach((nav) => {
+
+            nav.classList.remove("active");
+            nav.removeAttribute("aria-current");
+
+        });
+
+        item.classList.add("active");
+        item.setAttribute("aria-current", "true");
+
+        const prompt = item.dataset.prompt;
+
+        if (prompt) {
+
+            userInput.value = prompt;
+
+            userInput.dispatchEvent(
+                new Event("input", { bubbles: true })
+            );
+
+        }
+
+        userInput.focus();
+
+    });
+
+});
+// ==========================================
+// 13. SIDEBAR QUICK SETTINGS
+// ==========================================
+
+const sidebarSettingsButton =
+    document.getElementById("sidebarSettingsButton");
+
+sidebarSettingsButton.addEventListener("click", () => {
+
+    document.getElementById("settingsButton").click();
+
+});
+
+const quickThemeButton =
+    document.getElementById("quickThemeButton");
+
+const quickThemeIcon =
+    document.getElementById("quickThemeIcon");
+
+const quickThemeText =
+    document.getElementById("quickThemeText");
+
+
+// Update Theme Button
+
+function updateQuickThemeButton() {
+
+    const isDark =
+        document.body.dataset.theme === "dark";
+
+    quickThemeIcon.textContent =
+        isDark ? "☀" : "☾";
+
+    quickThemeText.textContent =
+        isDark ? "Light Mode" : "Dark Mode";
+
+    quickThemeButton.setAttribute(
+        "aria-label",
+        isDark
+            ? "Switch to light mode"
+            : "Switch to dark mode"
+    );
+
+}
+
+
+// Switch Theme Using Existing Settings
+
+quickThemeButton.addEventListener("click", () => {
+
+    const isDark =
+        document.body.dataset.theme === "dark";
+
+    const nextTheme =
+        isDark ? "light" : "dark";
+
+    const themeOption =
+        document.querySelector(
+            `.theme-option[data-theme="${nextTheme}"]`
+        );
+
+    if (themeOption) {
+
+        themeOption.click();
+
+    }
+
+    updateQuickThemeButton();
+
+});
+
+
+// Synchronize With Appearance Settings
+
+const sidebarThemeObserver =
+    new MutationObserver(updateQuickThemeButton);
+
+sidebarThemeObserver.observe(document.body, {
+
+    attributes: true,
+
+    attributeFilter: ["data-theme"]
+
+});
+
+updateQuickThemeButton();
