@@ -141,8 +141,59 @@
 
             </div>
             <div class="sidebar-footer">
-                <span>✈</span>
-                <p>Plan smarter. Travel further.</p>
+
+                {% if user %}
+
+                <div class="user-profile-card">
+
+                    <img src="{{ user.picture }}"
+                         alt="Profile Picture"
+                         class="user-avatar">
+
+                    <div class="user-details">
+
+                        <div class="user-name">
+                            {{ user.name }}
+                        </div>
+
+                        <div class="user-email">
+                            {{ user.email }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <a href="/logout"
+                   class="logout-btn">
+
+                    Logout
+
+                </a>
+
+                {% else %}
+
+                <div class="login-prompt">
+
+                    <h4>Save your travel plans</h4>
+
+                    <p>
+                        Sign in to sync conversations,
+                        budgets and travel history.
+                    </p>
+
+                    <button id="loginButton"
+                            class="login-btn-small"
+                            type="button">
+
+                        Continue with Google
+
+                    </button>
+
+                </div>
+
+                {% endif %}
+
             </div>
 
         </aside>
@@ -169,7 +220,7 @@
             <header class="chat-header">
 
                 <div class="header-info">
-                    
+
                     <div class="assistant-avatar">✈</div>
 
                     <div>
@@ -521,6 +572,14 @@
         </div>
 
     </div>
+    <script>
+
+window.currentUserEmail =
+
+    "{{ user.email if user else 'guest' }}";
+
+    </script>
+
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </body>

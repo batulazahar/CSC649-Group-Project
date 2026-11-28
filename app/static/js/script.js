@@ -12,8 +12,18 @@ const historySearch = document.getElementById("historySearch");
 // CHAT HISTORY
 // ==========================================
 
+const currentUserEmail =
+    window.currentUserEmail || "guest";
+
+const STORAGE_KEY =
+    `travelMateHistory_${currentUserEmail}`;
+
 let chatHistory = JSON.parse(
-    localStorage.getItem("travelMateHistory")
+
+    localStorage.getItem(
+        STORAGE_KEY
+    )
+
 ) || [];
 
 let currentConversation = {
@@ -535,7 +545,7 @@ function saveConversation() {
     }
 
     localStorage.setItem(
-        "travelMateHistory",
+        STORAGE_KEY,
         JSON.stringify(chatHistory)
     );
 
@@ -1052,7 +1062,7 @@ confirmDelete.addEventListener("click", function () {
     }
 
     localStorage.setItem(
-        "travelMateHistory",
+        STORAGE_KEY,
         JSON.stringify(chatHistory)
     );
 
@@ -1116,7 +1126,7 @@ function togglePin(id) {
     chat.pinned = !chat.pinned;
 
     localStorage.setItem(
-        "travelMateHistory",
+        STORAGE_KEY,
         JSON.stringify(chatHistory)
     );
 
@@ -1568,7 +1578,6 @@ if (historySearch) {
 
 /* =========================================
    ENHANCED CHAT INPUT - AUTO EXPANDING
-========================================= */
 
 function resizeChatInput() {
     userInput.style.height = "auto";
@@ -1591,3 +1600,22 @@ userInput.addEventListener("input", resizeChatInput);
 
 // Set initial textarea height
 resizeChatInput();
+/* =========================================
+   LOGIN BUTTON
+========================================= */
+const loginButton =
+    document.getElementById("loginButton");
+
+if (loginButton) {
+
+    loginButton.addEventListener(
+        "click",
+        () => {
+
+            window.location.href =
+                "/login";
+
+        }
+    );
+
+}
