@@ -2211,3 +2211,148 @@ newChatBtn.addEventListener("click", function () {
     showDestinationRecommendations();
 
 });
+
+/* =========================================
+   VOICE INPUT - SPEECH TO TEXT
+========================================= */
+
+const voiceButton =
+    document.getElementById("voiceButton");
+
+const voiceStatus =
+    document.getElementById("voiceStatus");
+
+const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+let isListening = false;
+
+function showVoiceStatus(message, listening = false) {
+    voiceStatus.textContent = message;
+    voiceStatus.hidden = !message;
+
+    voiceStatus.classList.toggle(
+        "listening",
+        listening
+    );
+}
+
+function updateVoiceButton(listening) {
+    isListening = listening;
+
+    voiceButton.classList.toggle(
+        "listening",
+        listening
+    );
+
+    voiceButton.setAttribute(
+        "aria-pressed",
+        String(listening)
+    );
+
+    const label = listening
+        ? "Stop voice input"
+        : "Start voice input";
+
+    voiceButton.title = label;
+    voiceButton.setAttribute("aria-label", label);
+}
+
+if (!SpeechRecognition) {
+
+    voiceButton.disabled = true;
+
+    voiceButton.title =
+        "Voice input is not supported by this browser";
+
+} else {
+
+    const recognition = new SpeechRecognition();
+
+    recognition.lang = "en-MY";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    voiceButton.addEventListener("click", () => {
+
+        if (isListening) {
+            recognition.stop();
+        } else {
+            try {
+                recognition.start();
+            } catch (error) {
+                showVoiceStatus(
+                    "Unable to start voice input."
+                );
+            }
+        }
+
+    });
+
+    recognition.onstart = () => {
+        updateVoiceButton(true);
+        showVoiceStatus("Listening...", true);
+    };
+
+    recognition.onresult = (event) => {
+
+        const transcript =
+            event.results[0][0].transcript;
+
+        const existingText =
+            userInput.value.trim();
+
+        const combinedText = existingText
+            ? `${existingText} ${transcript}`
+            : transcript;
+
+        userInput.value = userInput.maxLength > 0
+            ? combinedText.slice(0, userInput.maxLength)
+            : combinedText;
+
+        userInput.dispatchEvent(
+            new Event("input", { bubbles: true })
+        );
+
+        userInput.focus();
+
+        showVoiceStatus("Voice input captured.");
+    };
+
+    recognition.onerror = (event) => {
+
+        updateVoiceButton(false);
+
+        if (event.error === "not-allowed") {
+
+            showVoiceStatus(
+                "Please allow microphone access."
+            );
+
+        } else if (event.error === "no-speech") {
+
+            showVoiceStatus(
+                "No speech detected. Please try again."
+            );
+
+        } else {
+
+            showVoiceStatus(
+                "Voice input failed. Please try again."
+            );
+
+        }
+
+    };
+
+    recognition.onend = () => {
+
+        updateVoiceButton(false);
+
+        if (voiceStatus.textContent === "Listening...") {
+            showVoiceStatus("");
+        }
+
+    };
+}
