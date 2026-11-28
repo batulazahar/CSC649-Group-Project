@@ -670,9 +670,11 @@ async function sendMessage(messageOverride = null) {
     ).trim();
 
     // Prevent empty messages
-    if (!message || sendButton.disabled) {
-        return;
-    }
+    if (
+    !message ||
+    isChatSending || message.length > MAX_CHAT_CHARACTERS) {
+    return;
+}
 
     // Display user's message
     displayMessage(message, "user-message");
@@ -695,9 +697,11 @@ async function sendMessage(messageOverride = null) {
     // Clear input
     userInput.value = "";
     resizeChatInput();
+    updateChatInputState();
 
     // Disable button while waiting
-    sendButton.disabled = true;
+    isChatSending = true;
+    updateChatInputState();
 
     // Show typing animation
     const loadingMessage = showTypingIndicator();
@@ -770,8 +774,8 @@ async function sendMessage(messageOverride = null) {
     } finally {
 
         // Enable button again
-        sendButton.disabled = false;
-
+        isChatSending = false;
+        updateChatInputState();
         userInput.focus();
 
     }
@@ -796,14 +800,21 @@ sendButton.addEventListener("click", function () {
 
 userInput.addEventListener("keydown", function (event) {
 
-    if (event.key === "Enter") {
+    // Avoid sending during IME text composition
+    if (event.isComposing) {
+        return;
+    }
+
+    // Enter sends message
+    // Shift + Enter creates a new line
+    if (event.key === "Enter" && !event.shiftKey) {
 
         event.preventDefault();
 
-        sendMessage();
-
+        if (!sendButton.disabled) {
+            sendMessage();
+        }
     }
-
 });
 
 
@@ -893,7 +904,7 @@ function saveConversation() {
 
 /* ==========================================
    11. RESIZABLE + COLLAPSIBLE SIDEBAR
-========================================== */
+=================================== */
 
 const sidebar = document.querySelector(".sidebar");
 const sidebarResizer = document.getElementById("sidebarResizer");
@@ -919,7 +930,7 @@ sidebarToggle.addEventListener("click", function(event) {
         sidebar.classList.contains("collapsed");
 
     sidebarToggle.textContent =
-        collapsed ? "▶" : "◀";
+        collapsed ? "â–¶" : "â—€";
 
     localStorage.setItem(
         "travelMateSidebarCollapsed",
@@ -969,11 +980,11 @@ function loadSidebarState() {
 
         sidebar.classList.add("collapsed");
 
-        sidebarToggle.textContent = "▶";
+        sidebarToggle.textContent = "â–¶";
 
     } else {
 
-        sidebarToggle.textContent = "◀";
+        sidebarToggle.textContent = "â—€";
 
     }
 }
@@ -1239,11 +1250,11 @@ function renderConversationList() {
         empty.innerHTML =
             conversationSearch
                 ? `
-            <span>🔍</span>
+            <span>ðŸ”</span>
             <p>No matching conversations found</p>
           `
                 : `
-            <span>💬</span>
+            <span>ðŸ’¬</span>
             <p>No conversations yet</p>
           `;
         return;
@@ -1280,7 +1291,7 @@ function renderConversationList() {
         pinButton.type = "button";
         pinButton.title = chat.pinned ? "Unpin conversation" : "Pin conversation";
         pinButton.setAttribute("aria-label", pinButton.title);
-        pinButton.textContent = chat.pinned ? "📌" : "📍";
+        pinButton.textContent = chat.pinned ? "ðŸ“Œ" : "ðŸ“";
 
         const deleteButton = document.createElement("button");
         deleteButton.className = "delete-btn";
@@ -1288,7 +1299,7 @@ function renderConversationList() {
         deleteButton.type = "button";
         deleteButton.title = "Delete conversation";
         deleteButton.setAttribute("aria-label", "Delete conversation");
-        deleteButton.textContent = "🗑";
+        deleteButton.textContent = "ðŸ—‘";
 
         actions.appendChild(pinButton);
         actions.appendChild(deleteButton);
@@ -1852,7 +1863,7 @@ function updateQuickThemeButton() {
         document.body.dataset.theme === "dark";
 
     quickThemeIcon.textContent =
-        isDark ? "☀" : "☾";
+        isDark ? "â˜€" : "â˜¾";
 
     quickThemeText.textContent =
         isDark ? "Light Mode" : "Dark Mode";
@@ -1957,7 +1968,7 @@ resizeChatInput();
 
 /* =========================================
    LOGIN BUTTON
-========================================= */
+================================== */
 const loginButton =
     document.getElementById("loginButton");
 
@@ -1975,6 +1986,51 @@ if (loginButton) {
 
 }
 
+/* =========================================
+   CHAT INPUT - COUNTER AND VALIDATION
+
+const characterCounter =
+    document.getElementById("characterCounter");
+
+const MAX_CHAT_CHARACTERS = 2000;
+
+let isChatSending = false;
+
+function updateChatInputState() {
+    const currentLength = userInput.value.length;
+
+    // Update character counter
+    characterCounter.textContent =
+        `${currentLength} / ${MAX_CHAT_CHARACTERS}`;
+
+    // Reset counter colours
+    characterCounter.classList.remove(
+        "warning",
+        "limit"
+    );
+
+    // Update counter colour
+    if (currentLength >= MAX_CHAT_CHARACTERS) {
+        characterCounter.classList.add("limit");
+    } else if (currentLength >= 1800) {
+        characterCounter.classList.add("warning");
+    }
+
+    // Enable or disable Send button
+    sendButton.disabled =
+        isChatSending ||
+        userInput.value.trim() === "" ||
+        currentLength > MAX_CHAT_CHARACTERS;
+}
+
+// Update whenever user types
+userInput.addEventListener(
+    "input",
+    updateChatInputState
+);
+
+// Initialize input state
+updateChatInputState();
 
 const destinations = [
     {
@@ -2214,7 +2270,6 @@ newChatBtn.addEventListener("click", function () {
 
 /* =========================================
    VOICE INPUT - SPEECH TO TEXT
-========================================= */
 
 const voiceButton =
     document.getElementById("voiceButton");

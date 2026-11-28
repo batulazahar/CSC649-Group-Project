@@ -330,16 +330,28 @@
                     </button>
                     <textarea id="userInput"
                               rows="1"
+                              maxlength="2000"
                               placeholder="Ask me about your travel budget..."
                               autocomplete="off"
-                              aria-label="Enter your message"></textarea>
+                              aria-label="Enter your message"
+                              aria-describedby="characterCounter keyboardHint"></textarea>
 
-                    <button id="sendButton" type="button">
+                    <span id="characterCounter"
+                          class="character-counter">
+                        0 / 2000
+                    </span>
+
+                    <button id="sendButton" type="button" disabled>
                         Send <span>➤</span>
                     </button>
 
                 </div>
 
+                <p class="keyboard-hint" id="keyboardHint">
+                    <kbd>Enter</kbd> to send
+                    <span>·</span>
+                    <kbd>Shift</kbd> + <kbd>Enter</kbd> for a new line
+                </p>
                 <div id="voiceStatus"
                      class="voice-status"
                      role="status"
