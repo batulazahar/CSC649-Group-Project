@@ -64,22 +64,30 @@ Command used:
 | MT02 | Known slang detection | What does G.O.A.T. mean? | Correct slang meaning retrieved. | PASSED |
 | MT03 | Unknown slang handling | What does rizz mean? | Gemini provided a slang explanation. | PASSED |
 | MT04 | Travel fallback | How do I travel from Kuala Lumpur to Penang using train? | Gemini provided general travel guidance. | PASSED |
+| MT05 | Travel budget summary | Show my travel budget summary. (Budget RM1,000; expenses RM0) | System displayed the correct budget, expenses and remaining balance. | PASSED |
+| MT06 | Budget warning at 80% | Record expenses totalling RM800 against RM1,000 budget. | System displayed an 80% budget usage warning. | PASSED |
+| MT07 | Budget exceeded warning | Record an additional RM250 expense. | System displayed RM1,050 total expenses, RM-50 remaining balance and a budget exceeded warning. | PASSED |
+| MT08 | Expense Tracker integration | Record RM800 for Food and RM250 for Transport. | Expenses were successfully recorded and included in the budget summary. | PASSED |
 
 
+### Automated Testing
+- Total test cases: 4
+- Passed: 4
+- Failed: 0
 
-\- Total test cases: 4
+### Manual Testing
+- Total test cases: 8
+- Passed: 8
+- Failed: 0
 
-\- Passed: 4
+### Overall Testing
+- Total test cases: 12
+- Passed: 12
+- Failed: 0
 
-\- Failed: 0
-
-
-
-\*\*Overall Result: PASSED\*\*
-
+**Overall Result: PASSED**
 
 
-All four automated test cases passed successfully.
 
 
 
