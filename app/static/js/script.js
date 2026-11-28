@@ -1576,14 +1576,15 @@ if (historySearch) {
 
 }
 
+
 /* =========================================
    ENHANCED CHAT INPUT - AUTO EXPANDING
+========================================= */
 
 function resizeChatInput() {
     userInput.style.height = "auto";
 
     const maxInputHeight = 160;
-
     const requiredHeight = userInput.scrollHeight;
 
     userInput.style.height =
@@ -1600,6 +1601,8 @@ userInput.addEventListener("input", resizeChatInput);
 
 // Set initial textarea height
 resizeChatInput();
+
+
 /* =========================================
    LOGIN BUTTON
 ========================================= */
@@ -1619,3 +1622,240 @@ if (loginButton) {
     );
 
 }
+
+
+const destinations = [
+    {
+        country: "🇹🇭 Explore Thailand",
+        countryName: "Thailand",
+        subtitle: "Discover beautiful places in Thailand",
+        places: [
+            {
+                name: "Phi Phi Islands",
+                description: "Explore crystal-clear waters and tropical beaches.",
+                image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600"
+            },
+            {
+                name: "Bangkok",
+                description: "Experience vibrant city life and beautiful temples.",
+                image: "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=600"
+            },
+            {
+                name: "Chiang Mai",
+                description: "Discover mountain scenery and cultural attractions.",
+                image: "https://images.unsplash.com/photo-1519451241324-20b4ea2c4220?w=600"
+            }
+        ]
+    },
+    {
+        country: "🇫🇷 Explore France",
+        countryName: "France",
+        subtitle: "Discover the beauty of France",
+        places: [
+            {
+                name: "Eiffel Tower",
+                description: "Enjoy the iconic landmark of Paris.",
+                image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600"
+            },
+            {
+                name: "French Riviera",
+                description: "Relax along beautiful Mediterranean coastlines.",
+                image: "https://images.unsplash.com/photo-1498307833015-e7b400441eb8?w=600"
+            },
+            {
+                name: "Mont Saint-Michel",
+                description: "Visit a historic island village and abbey.",
+                image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=600"
+            }
+        ]
+    },
+    {
+        country: "🇯🇵 Explore Japan",
+        countryName: "Japan",
+        subtitle: "Experience Japanese culture and scenery",
+        places: [
+            {
+                name: "Mount Fuji",
+                description: "Admire Japan's famous mountain landscape.",
+                image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600"
+            },
+            {
+                name: "Kyoto",
+                description: "Explore traditional streets and temples.",
+                image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600"
+            },
+            {
+                name: "Tokyo",
+                description: "Discover modern attractions and city culture.",
+                image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600"
+            }
+        ]
+    },
+    {
+        country: "🇮🇹 Explore Italy",
+        countryName: "Italy",
+        subtitle: "Discover historic cities and scenic destinations",
+        places: [
+            {
+                name: "Venice",
+                description: "Experience charming canals and architecture.",
+                image: "https://images.unsplash.com/photo-1514890547357-a9ee288728e0?w=600"
+            },
+            {
+                name: "Rome",
+                description: "Explore ancient landmarks and historic sites.",
+                image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=600"
+            },
+            {
+                name: "Amalfi Coast",
+                description: "Enjoy colourful coastal villages and sea views.",
+                image: "https://images.unsplash.com/photo-1533587851505-d119e13fa0d7?w=600"
+            }
+        ]
+    },
+    {
+        country: "🇰🇷 Explore South Korea",
+        countryName: "Korea",
+        subtitle: "Experience the best of South Korea",
+        places: [
+            {
+                name: "N Seoul Tower",
+                description: "Enjoy beautiful views of Seoul.",
+                image: "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=600"
+            },
+            {
+                name: "Jeju Island",
+                description: "Explore nature, beaches and volcanic landscapes.",
+                image: "https://images.unsplash.com/photo-1570789210967-2cac24afeb00?w=600"
+            },
+            {
+                name: "Gyeongbokgung Palace",
+                description: "Discover traditional Korean architecture.",
+                image: "https://images.unsplash.com/photo-1548115184-bc6544d06a58?w=600"
+            }
+        ]
+    }
+];
+
+let currentDestination = 0;
+let destinationTimer;
+
+function displayDestinations(index) {
+
+    const destination = destinations[index];
+
+    document.getElementById("destinationTitle").textContent =
+        destination.country;
+
+    document.getElementById("destinationSubtitle").textContent =
+        destination.subtitle;
+
+    const cards = document.getElementById("destinationCards");
+
+    cards.innerHTML = destination.places.map(place => `
+        <button
+            type="button"
+            class="destination-card"
+            data-country="${destination.countryName}"
+            data-place="${place.name}"
+            aria-label="Get travel recommendations for ${place.name}, ${destination.countryName}"
+        >
+            <img src="${place.image}" alt="${place.name}">
+
+            <div class="destination-info">
+                <h3>${place.name}</h3>
+                <p>${place.description}</p>
+                <span class="card-action">Explore with AI →</span>
+            </div>
+        </button>
+    `).join("");
+
+    // Update country indicators
+    document.getElementById("destinationIndicators").innerHTML =
+        destinations.map((item, i) => `
+            <button
+                class="destination-dot ${i === index ? 'active' : ''}"
+                onclick="changeDestination(${i})"
+                aria-label="Show ${item.countryName}"
+            ></button>
+        `).join("");
+}
+
+// ==========================================
+// CLICKABLE DESTINATION CARDS
+// ==========================================
+
+const destinationCards = document.getElementById("destinationCards");
+
+destinationCards.addEventListener("click", function (event) {
+
+    const selectedCard = event.target.closest(".destination-card");
+
+    if (!selectedCard || sendButton.disabled) {
+        return;
+    }
+
+    const country = selectedCard.dataset.country;
+    const place = selectedCard.dataset.place;
+
+    const prompt = `
+I am interested in visiting ${place}, ${country}.
+
+Please recommend the best places to visit in ${country}.
+`;
+
+    sendMessage(prompt);
+
+});
+
+function changeDestination(index) {
+
+    currentDestination = index;
+
+    displayDestinations(currentDestination);
+
+    // Restart the 5-second timer
+    startDestinationRotation();
+}
+
+function startDestinationRotation() {
+
+    clearInterval(destinationTimer);
+
+    destinationTimer = setInterval(() => {
+
+        currentDestination =
+            (currentDestination + 1) % destinations.length;
+
+        displayDestinations(currentDestination);
+
+    }, 5000);
+}
+
+// Start carousel
+displayDestinations(currentDestination);
+startDestinationRotation();
+
+const destinationSection = document.getElementById("destinationSection");
+
+function showDestinationRecommendations() {
+    destinationSection.hidden = false;
+
+    // Show the first country's recommendations
+    displayDestinations(0);
+
+    // Start the 5-second rotation
+    startDestinationRotation();
+}
+
+const newChatBtn = document.getElementById("newChatButton");
+
+newChatBtn.addEventListener("click", function () {
+
+    // Clear the previous conversation
+    // Keep your existing new chat code here
+
+    // Show destination recommendations
+    showDestinationRecommendations();
+
+});

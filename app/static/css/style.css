@@ -1849,6 +1849,7 @@ body.sidebar-resizing {
 
 /* =========================================
    ENHANCED CHAT INPUT - AUTO EXPANDING
+========================================= */
 
 .input-wrapper {
     align-items: flex-end;
@@ -1895,7 +1896,7 @@ body.sidebar-resizing {
 
     .input-wrapper textarea::-webkit-scrollbar-track {
         background: transparent;
-}
+    }
 /* Login section */
 
 .login-prompt {
@@ -1938,6 +1939,7 @@ body.sidebar-resizing {
 
 /* ==========================================
    LOGGED IN USER PANEL
+========================================== */
 
 .user-profile-card {
     display: flex;
@@ -1997,3 +1999,774 @@ body.sidebar-resizing {
     .logout-btn:hover {
         background: #FEE2E2;
     }
+
+
+/* ==========================================
+   ROTATING TRAVEL RECOMMENDATIONS
+========================================== */
+
+.destination-section {
+    max-width: 950px;
+    margin: 35px auto;
+}
+
+.destination-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+    .destination-header h2 {
+        font-size: 21px;
+        color: var(--text-dark);
+        margin-bottom: 6px;
+    }
+
+    .destination-header p {
+        font-size: 13px;
+        color: var(--text-light);
+    }
+
+.rotation-label {
+    font-size: 11px;
+    padding: 8px 12px;
+    border-radius: 20px;
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.destination-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.destination-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: 0.3s ease;
+    animation: cardFade 0.5s ease;
+}
+
+    .destination-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(101,86,204,0.1);
+    }
+
+    .destination-card img {
+        width: 100%;
+        height: 145px;
+        object-fit: cover;
+    }
+
+.destination-info {
+    padding: 15px;
+}
+
+    .destination-info h3 {
+        font-size: 14px;
+        margin-bottom: 7px;
+        color: var(--text-dark);
+    }
+
+    .destination-info p {
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--text-light);
+    }
+
+.destination-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 22px;
+}
+
+.destination-dot {
+    width: 9px;
+    height: 9px;
+    border: none;
+    border-radius: 50%;
+    background: #D5D2E5;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+    .destination-dot.active {
+        width: 25px;
+        border-radius: 10px;
+        background: var(--primary);
+    }
+
+@keyframes cardFade {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 650px) {
+    .destination-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .destination-card img {
+        height: 180px;
+    }
+
+    .destination-header {
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .rotation-label {
+        white-space: nowrap;
+    }
+}
+
+
+
+/* ==========================================
+   TRAVELMATE UI POLISH OVERRIDES
+   Keep this section at the very bottom.
+========================================== */
+
+:root {
+    --primary: #5B5BD6;
+    --primary-dark: #4848B8;
+    --primary-light: #F0F0FF;
+    --background: #F6F7FB;
+    --white: #FFFFFF;
+    --text-dark: #202235;
+    --text-light: #74778B;
+    --border: #E5E7F0;
+    --shadow-soft: 0 8px 24px rgba(31, 35, 72, 0.06);
+}
+
+body {
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    background: var(--background);
+    color: var(--text-dark);
+}
+
+.chat-container {
+    min-height: 100dvh;
+}
+
+.sidebar {
+    background: #FFFFFF;
+    border-right: 1px solid var(--border);
+    padding: 22px 16px;
+}
+
+.sidebar-brand {
+    gap: 11px;
+    margin-bottom: 24px;
+}
+
+.brand-icon,
+.assistant-avatar {
+    border-radius: 14px;
+    background: #EEEEFF;
+    color: var(--primary);
+}
+
+.sidebar-brand h2 {
+    font-size: 17px;
+    letter-spacing: -0.3px;
+}
+
+.sidebar-brand p {
+    font-size: 11px;
+}
+
+.new-chat-btn {
+    min-height: 43px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(91, 91, 214, 0.15);
+}
+
+.workspace-nav {
+    margin-top: 22px;
+}
+
+.nav-item {
+    min-height: 42px;
+    border-radius: 9px;
+}
+
+    .nav-item.active {
+        background: #EEEEFF;
+        color: #4D4DBF;
+    }
+
+.history-search input {
+    min-height: 39px;
+    border-radius: 9px;
+}
+
+.history-item {
+    min-height: 40px;
+    margin-bottom: 2px;
+    padding: 8px 9px;
+}
+
+    .history-item.pinned {
+        border-left-width: 2px;
+    }
+
+.chat-header {
+    height: 76px;
+    min-height: 76px;
+    padding: 14px clamp(18px, 3vw, 38px);
+    box-shadow: 0 2px 8px rgba(31, 35, 72, 0.025);
+}
+
+    .chat-header h2 {
+        font-size: 16px;
+        letter-spacing: -0.2px;
+    }
+
+.header-label {
+    background: #EEEEFF;
+    color: #4D4DBF;
+    letter-spacing: 0.7px;
+}
+
+.settings-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    font-size: 18px;
+}
+
+.chat-messages {
+    padding: 30px clamp(16px, 5vw, 64px);
+}
+
+.welcome-message {
+    width: 100%;
+    max-width: 980px;
+    margin: clamp(26px, 5vh, 54px) auto 28px;
+}
+
+.welcome-icon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 17px;
+    border-radius: 18px;
+    font-size: 28px;
+}
+
+.welcome-message h1 {
+    font-size: clamp(24px, 3vw, 32px);
+    letter-spacing: -0.8px;
+    margin-bottom: 9px;
+}
+
+.welcome-message > p {
+    max-width: 600px;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.suggestion-container {
+    display: block;
+    margin-top: 28px;
+}
+
+.destination-section {
+    max-width: 900px;
+    margin: 30px auto 0;
+    padding: 22px;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow-soft);
+    text-align: left;
+}
+
+.destination-header {
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 17px;
+}
+
+    .destination-header h2 {
+        font-size: 19px;
+        letter-spacing: -0.35px;
+    }
+
+    .destination-header p {
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+.rotation-label {
+    flex-shrink: 0;
+    padding: 7px 10px;
+    border: 1px solid #E4E4FF;
+    border-radius: 999px;
+    background: #F5F5FF;
+    color: #5555C5;
+    font-size: 10px;
+    letter-spacing: 0.15px;
+}
+
+.destination-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.destination-card {
+    min-width: 0;
+    border: 1px solid #E9EAF1;
+    border-radius: 13px;
+    background: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(31, 35, 72, 0.035);
+    animation: cardFade 0.35s ease both;
+}
+
+    .destination-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 18px rgba(31, 35, 72, 0.09);
+    }
+
+    .destination-card img {
+        display: block;
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        background: #ECEEF5;
+    }
+
+.destination-info {
+    min-height: 104px;
+    padding: 13px 14px 15px;
+}
+
+    .destination-info h3 {
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 650;
+        line-height: 1.4;
+    }
+
+    .destination-info p {
+        font-size: 11px;
+        line-height: 1.55;
+    }
+
+.destination-indicators {
+    margin-top: 18px;
+}
+
+.destination-dot {
+    width: 7px;
+    height: 7px;
+    background: #D9DAE8;
+}
+
+    .destination-dot.active {
+        width: 22px;
+        background: var(--primary);
+    }
+
+.chat-input-container {
+    padding: 15px clamp(16px, 5vw, 64px) 12px;
+    background: rgba(255, 255, 255, 0.97);
+}
+
+.input-wrapper {
+    max-width: 900px;
+    gap: 8px;
+    padding: 6px 7px 6px 12px;
+    border: 1px solid #DCDDE9;
+    border-color: #DCDDE9;
+    border-radius: 14px;
+    box-shadow: 0 3px 12px rgba(31, 35, 72, 0.035);
+}
+
+    .input-wrapper:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(91, 91, 214, 0.09);
+    }
+
+    .input-wrapper textarea {
+        display: block;
+        min-height: 42px;
+        padding: 11px 5px;
+        font-size: 13px;
+        line-height: 20px;
+    }
+
+    .input-wrapper #sendButton {
+        min-height: 40px;
+        padding: 0 18px;
+        border-radius: 10px;
+        font-size: 12px;
+    }
+
+.input-disclaimer {
+    max-width: 900px;
+    margin-top: 8px;
+    font-size: 10px;
+}
+
+.message {
+    max-width: min(78%, 760px);
+    margin-bottom: 18px;
+}
+
+.message-content {
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.65;
+    box-shadow: 0 2px 8px rgba(31, 35, 72, 0.025);
+}
+
+/* Keep optional bubble themes visually restrained. */
+body[data-bubble] .message-content {
+    box-shadow: none;
+}
+
+body[data-bubble="cloud"] .message-content::after,
+body[data-bubble="heart"] .message-content::after,
+body[data-bubble="star"] .message-content::after,
+body[data-bubble="bear"] .message-content::after {
+    display: none;
+}
+
+.settings-panel {
+    box-shadow: -12px 0 40px rgba(20, 22, 45, 0.12);
+}
+
+.settings-header,
+.settings-body {
+    padding: 22px;
+}
+
+.theme-option,
+.bubble-option {
+    border-width: 1px;
+    border-radius: 10px;
+}
+
+.modal-content {
+    color: var(--text-dark);
+    border: 1px solid var(--border);
+    box-shadow: 0 16px 45px rgba(20, 22, 45, 0.16);
+}
+
+@media (max-width: 768px) {
+    .destination-section {
+        padding: 17px;
+        margin-top: 24px;
+    }
+
+    .destination-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .destination-card img {
+        height: 130px;
+    }
+
+    .message {
+        max-width: 88%;
+    }
+}
+
+@media (max-width: 550px) {
+    .chat-header {
+        height: 68px;
+        min-height: 68px;
+    }
+
+    .chat-messages {
+        padding: 18px 13px;
+    }
+
+    .welcome-message {
+        margin-top: 22px;
+    }
+
+        .welcome-message h1 {
+            font-size: 23px;
+        }
+
+    .destination-section {
+        padding: 14px;
+        border-radius: 14px;
+    }
+
+    .destination-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .destination-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .destination-card img {
+        height: 175px;
+    }
+
+    .destination-info {
+        min-height: auto;
+    }
+
+    .message {
+        max-width: 94%;
+    }
+
+    .chat-input-container {
+        padding: 10px 12px;
+    }
+
+    .input-wrapper #sendButton {
+        padding: 0 13px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* =========================================
+   14. DARK MODE COMPLETION FIX
+   Keep all interface surfaces readable in dark mode.
+========================================= */
+
+body[data-theme="dark"] {
+    background: var(--background);
+    color: var(--text-dark);
+    color-scheme: dark;
+}
+
+    body[data-theme="dark"] .chat-container,
+    body[data-theme="dark"] .main-chat,
+    body[data-theme="dark"] .chat-messages {
+        background: var(--background);
+        color: var(--text-dark);
+    }
+
+    body[data-theme="dark"] .sidebar,
+    body[data-theme="dark"] .chat-header,
+    body[data-theme="dark"] .chat-input-container,
+    body[data-theme="dark"] .input-wrapper,
+    body[data-theme="dark"] .settings-panel,
+    body[data-theme="dark"] .modal-content {
+        background: var(--white);
+        color: var(--text-dark);
+        border-color: var(--border);
+    }
+
+        body[data-theme="dark"] .sidebar-brand h2,
+        body[data-theme="dark"] .chat-header h2,
+        body[data-theme="dark"] .welcome-message h1,
+        body[data-theme="dark"] .suggestion-card h3,
+        body[data-theme="dark"] .settings-header h2,
+        body[data-theme="dark"] .settings-section h3,
+        body[data-theme="dark"] .history-title,
+        body[data-theme="dark"] .user-name {
+            color: var(--text-dark);
+        }
+
+        body[data-theme="dark"] .sidebar-brand p,
+        body[data-theme="dark"] .chat-header p,
+        body[data-theme="dark"] .welcome-message > p,
+        body[data-theme="dark"] .suggestion-card p,
+        body[data-theme="dark"] .settings-header p,
+        body[data-theme="dark"] .settings-section > p,
+        body[data-theme="dark"] .history-empty,
+        body[data-theme="dark"] .user-email,
+        body[data-theme="dark"] .input-disclaimer,
+        body[data-theme="dark"] .typing-text {
+            color: var(--text-light);
+        }
+
+    body[data-theme="dark"] .suggestion-card,
+    body[data-theme="dark"] .destination-section,
+    body[data-theme="dark"] .destination-card,
+    body[data-theme="dark"] .history-item,
+    body[data-theme="dark"] .history-search input,
+    body[data-theme="dark"] .appearance-preview,
+    body[data-theme="dark"] .theme-option,
+    body[data-theme="dark"] .bubble-option,
+    body[data-theme="dark"] .reset-settings,
+    body[data-theme="dark"] .close-settings,
+    body[data-theme="dark"] .sidebar-toggle,
+    body[data-theme="dark"] .sidebar-toggle-arrow,
+    body[data-theme="dark"] .login-prompt {
+        background: #292C3B;
+        color: var(--text-dark);
+        border-color: var(--border);
+    }
+
+        body[data-theme="dark"] .suggestion-card:hover,
+        body[data-theme="dark"] .history-item:hover,
+        body[data-theme="dark"] .nav-item:hover,
+        body[data-theme="dark"] .nav-item.active {
+            background: #37324F;
+            border-color: #6557A7;
+            color: #D5CBFF;
+        }
+
+    body[data-theme="dark"] .input-wrapper textarea,
+    body[data-theme="dark"] .input-wrapper input,
+    body[data-theme="dark"] .history-search input {
+        background: transparent;
+        color: var(--text-dark);
+        border-color: var(--border);
+    }
+
+        body[data-theme="dark"] .input-wrapper textarea::placeholder,
+        body[data-theme="dark"] .input-wrapper input::placeholder,
+        body[data-theme="dark"] .history-search input::placeholder {
+            color: #9698AD;
+        }
+
+    body[data-theme="dark"] .bot-message .message-content {
+        background: var(--bot-bubble);
+        color: var(--bot-bubble-text);
+        border-color: var(--border);
+    }
+
+    body[data-theme="dark"] .user-message .message-content {
+        color: var(--user-bubble-text);
+    }
+
+    body[data-theme="dark"] .theme-option.active,
+    body[data-theme="dark"] .bubble-option.active,
+    body[data-theme="dark"] .colour-option.active {
+        background: #37324F;
+        border-color: var(--primary);
+    }
+
+    body[data-theme="dark"] .mini-bubble {
+        color: var(--user-bubble-text);
+    }
+
+    body[data-theme="dark"] .destination-card h3,
+    body[data-theme="dark"] .destination-card p,
+    body[data-theme="dark"] .destination-header h2,
+    body[data-theme="dark"] .destination-header p {
+        color: var(--text-dark);
+    }
+
+    body[data-theme="dark"] .destination-dot {
+        background: #55586B;
+    }
+
+        body[data-theme="dark"] .destination-dot.active {
+            background: var(--primary);
+        }
+
+    body[data-theme="dark"] .sidebar-footer,
+    body[data-theme="dark"] .sidebar-settings,
+    body[data-theme="dark"] .chat-header,
+    body[data-theme="dark"] .chat-input-container,
+    body[data-theme="dark"] .settings-header {
+        border-color: var(--border);
+    }
+
+    body[data-theme="dark"] .sidebar-resizer::before,
+    body[data-theme="dark"] .sidebar-resizer {
+        background-color: var(--border);
+    }
+
+    body[data-theme="dark"] .delete-btn {
+        color: #FCA5A5;
+    }
+
+    body[data-theme="dark"] .modal-overlay {
+        background: rgba(0, 0, 0, 0.68);
+    }
+
+    body[data-theme="dark"] .modal-content p {
+        color: var(--text-light);
+    }
+
+    body[data-theme="dark"] .settings-panel::backdrop {
+        background: rgba(0, 0, 0, 0.62);
+    }
+
+    body[data-theme="dark"] .chat-messages::-webkit-scrollbar-thumb,
+    body[data-theme="dark"] .sidebar::-webkit-scrollbar-thumb {
+        background: #4B4E61;
+    }
+
+    body[data-theme="dark"] .new-chat-btn,
+    body[data-theme="dark"] .input-wrapper #sendButton {
+        background: var(--primary);
+        color: #171821;
+    }
+
+        body[data-theme="dark"] .new-chat-btn:hover,
+        body[data-theme="dark"] .input-wrapper #sendButton:hover {
+            background: var(--primary-dark);
+        }
+
+@media (prefers-reduced-motion: no-preference) {
+    body,
+    body .sidebar,
+    body .main-chat,
+    body .chat-header,
+    body .chat-input-container,
+    body .suggestion-card,
+    body .settings-panel,
+    body .message-content {
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+}
+
+/* Clickable Destination Cards */
+
+.destination-card {
+    width: 100%;
+    padding: 0;
+    font-family: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--white);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+    .destination-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(101, 86, 204, 0.15);
+    }
+
+    .destination-card:focus-visible {
+        outline: 3px solid var(--primary);
+        outline-offset: 3px;
+    }
+
+.card-action {
+    display: inline-block;
+    margin-top: 12px;
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+}
