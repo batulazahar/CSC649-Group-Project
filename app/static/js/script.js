@@ -9,6 +9,32 @@ const chatMessages = document.getElementById("chatMessages");
 const historySearch = document.getElementById("historySearch");
 
 // ==========================================
+// AUDIO READING CONTROL
+// ==========================================
+
+let activeSpeechButton = null;
+let activeSpeechUtterance = null;
+
+function stopActiveSpeech() {
+
+    if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+    }
+
+    if (activeSpeechButton) {
+        activeSpeechButton.classList.remove("action-active");
+        activeSpeechButton.title = "Read response aloud";
+        activeSpeechButton.setAttribute(
+            "aria-label",
+            "Read response aloud"
+        );
+    }
+
+    activeSpeechButton = null;
+    activeSpeechUtterance = null;
+}
+
+// ==========================================
 // CHAT HISTORY
 // ==========================================
 
@@ -202,7 +228,35 @@ function renderMarkdown(container, text) {
 // 4. DISPLAY CHAT MESSAGE
 // ==========================================
 
-function displayMessage(message, sender) {
+function displayMessage(message, sender, originalPrompt = "") {
+
+    // ==========================================
+    // TOAST NOTIFICATION
+    // ==========================================
+
+    function showToast(message) {
+
+        let toast = document.getElementById("travelMateToast");
+
+        if (!toast) {
+
+            toast = document.createElement("div");
+            toast.id = "travelMateToast";
+            toast.className = "travelmate-toast";
+
+            document.body.appendChild(toast);
+        }
+
+        toast.textContent = message;
+
+        toast.classList.add("show");
+
+        clearTimeout(toast.hideTimeout);
+
+        toast.hideTimeout = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2500);
+    }
 
     // Remove welcome screen
     const welcomeMessage = document.querySelector(".welcome-message");
@@ -211,36 +265,311 @@ function displayMessage(message, sender) {
         welcomeMessage.remove();
     }
 
-    // Create message container
     const messageDiv = document.createElement("div");
-
+    messageDiv.dataset.rawMessage = message;
     messageDiv.classList.add("message", sender);
 
-    // Create message content
     const messageContent = document.createElement("div");
-
     messageContent.classList.add("message-content");
 
-    // Format AI response
     if (sender === "bot-message") {
-
         renderMarkdown(messageContent, message);
-
     } else {
-
         messageContent.textContent = message;
-
     }
 
     messageDiv.appendChild(messageContent);
 
-    // Add message to chat
-    chatMessages.appendChild(messageDiv);
+    // Add action toolbar only to AI responses
+    if (sender === "bot-message") {
 
-    // Scroll to latest message
+        const toolbar = document.createElement("div");
+        toolbar.classList.add("message-actions");
+
+        const actions = [
+            {
+                name: "Copy",
+                icon: `<svg viewBox="0 0 24 24">
+            <rect x="8" y="8" width="13" height="13" rx="2"/>
+            <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>
+        </svg>`,
+                label: "Copy response"
+            },
+            {
+                name: "Regenerate",
+                icon: `<svg viewBox="0 0 24 24">
+            <path d="M20 7v5h-5"/>
+            <path d="M4 17v-5h5"/>
+            <path d="M5.6 9a7 7 0 0 1 11.5-2L20 12"/>
+            <path d="M18.4 15a7 7 0 0 1-11.5 2L4 12"/>
+        </svg>`,
+                label: "Regenerate response"
+            },
+            {
+                name: "Like",
+                icon: `<svg viewBox="0 0 24 24">
+            <path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3Z"/>
+            <path d="M7 10l5-8a3 3 0 0 1 2 3v5h5a2 2 0 0 1 2 2l-2 7a2 2 0 0 1-2 2H7"/>
+        </svg>`,
+                label: "Like response"
+            },
+            {
+                name: "Dislike",
+                icon: `<svg viewBox="0 0 24 24">
+            <path d="M7 14V3H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3Z"/>
+            <path d="M7 14l5 8a3 3 0 0 0 2-3v-5h5a2 2 0 0 0 2-2l-2-7a2 2 0 0 0-2-2H7"/>
+        </svg>`,
+                label: "Dislike response"
+            },
+            {
+                name: "Read aloud",
+                icon: `<svg viewBox="0 0 24 24">
+            <path d="M11 5 6 9H3v6h3l5 4V5Z"/>
+            <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+            <path d="M19 5a10 10 0 0 1 0 14"/>
+        </svg>`,
+                label: "Read response aloud"
+            }
+        ];
+
+
+        actions.forEach(action => {
+
+            const button = document.createElement("button");
+
+            button.type = "button";
+            button.classList.add("message-action");
+
+            button.title = action.label;
+            button.setAttribute("aria-label", action.label);
+
+            button.innerHTML = action.icon;
+            button.dataset.originalIcon = action.icon;
+
+            // Execute the action only when the button is clicked
+            button.addEventListener("click", async function () {
+
+                // ==========================================
+                // COPY MESSAGE
+                // ==========================================
+
+                if (action.name === "Copy") {
+
+                    try {
+
+                        await navigator.clipboard.writeText(message);
+
+                        button.classList.add("action-active");
+
+                        showToast("✓ Message copied successfully!");
+
+                        setTimeout(() => {
+                            button.classList.remove("action-active");
+                        }, 1500);
+
+                    } catch (error) {
+
+                        console.error("Copy failed:", error);
+
+                        showToast("Unable to copy message.");
+
+                    }
+                }
+
+                // ==========================================
+                // REGENERATE RESPONSE
+                // ==========================================
+
+                else if (action.name === "Regenerate") {
+
+                    if (originalPrompt) {
+
+                        regenerateResponse(originalPrompt, messageDiv);
+
+                    } else {
+
+                        showToast("Original question could not be found.");
+
+                    }
+                }
+
+                // ==========================================
+                // LIKE / DISLIKE
+                // ==========================================
+
+                else if (
+                    action.name === "Like" ||
+                    action.name === "Dislike"
+                ) {
+
+                    toolbar.querySelectorAll(".message-action").forEach(btn => {
+
+                        if (
+                            btn.title === "Like response" ||
+                            btn.title === "Dislike response"
+                        ) {
+                            btn.classList.remove("action-active");
+                        }
+
+                    });
+
+                    button.classList.add("action-active");
+                }
+
+                // ==========================================
+                // READ ALOUD - PLAY / STOP
+                // ==========================================
+
+                else if (action.name === "Read aloud") {
+
+                    if (!("speechSynthesis" in window)) {
+
+                        showToast("Your browser does not support audio reading.");
+
+                        return;
+                    }
+
+                    // Click the same button again to stop audio
+                    if (activeSpeechButton === button) {
+
+                        stopActiveSpeech();
+
+                        showToast("Audio reading stopped!");
+
+                        return;
+                    }
+
+                    // Stop any previously playing message
+                    stopActiveSpeech();
+
+                    const speech = new SpeechSynthesisUtterance(message);
+
+                    speech.lang = "en-US";
+                    speech.rate = 1;
+
+                    activeSpeechButton = button;
+                    activeSpeechUtterance = speech;
+
+                    button.classList.add("action-active");
+                    button.title = "Stop reading";
+
+                    button.setAttribute(
+                        "aria-label",
+                        "Stop reading"
+                    );
+
+                    // Reset button after audio finishes
+                    speech.onend = () => {
+
+                        if (activeSpeechButton === button) {
+                            stopActiveSpeech();
+                        }
+
+                    };
+
+                    // Reset button if an audio error occurs
+                    speech.onerror = () => {
+
+                        if (activeSpeechButton === button) {
+                            stopActiveSpeech();
+                        }
+
+                    };
+
+                    window.speechSynthesis.speak(speech);
+                }
+
+            });
+
+            toolbar.appendChild(button);
+
+        });
+
+        messageDiv.appendChild(toolbar);
+    }
+
+    chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
     return messageDiv;
+}
+
+
+// ==========================================
+// REGENERATE AI RESPONSE
+// ==========================================
+
+async function regenerateResponse(originalPrompt, oldMessageDiv) {
+
+    const regenerateButton = oldMessageDiv.querySelector(
+        '[title="Regenerate response"]'
+    );
+
+    if (regenerateButton) {
+        regenerateButton.disabled = true;
+        regenerateButton.innerHTML = `
+    <span class="action-spinner"></span>
+`;
+    }
+
+    try {
+
+        const response = await fetch("/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                message: originalPrompt
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.response) {
+            throw new Error(data.error || "Unable to regenerate response.");
+        }
+
+        // Remove the previous AI response from the screen
+        oldMessageDiv.remove();
+
+        // Remove the previous AI response from conversation history
+        for (
+            let i = currentConversation.messages.length - 1;
+            i >= 0;
+            i--
+        ) {
+            if (
+                currentConversation.messages[i].sender === "bot" &&
+                currentConversation.messages[i].text ===
+                oldMessageDiv.querySelector(".message-content").textContent
+            ) {
+                currentConversation.messages.splice(i, 1);
+                break;
+            }
+        }
+
+        // Display and save the new response
+        displayMessage(data.response, "bot-message", originalPrompt);
+
+        currentConversation.messages.push({
+            sender: "bot",
+            text: data.response
+        });
+
+        saveConversation();
+
+    } catch (error) {
+
+        console.error("Regenerate Error:", error);
+        alert("Could not regenerate the response: " + error.message);
+
+        if (regenerateButton) {
+            regenerateButton.disabled = false;
+            regenerateButton.innerHTML =
+                regenerateButton.dataset.originalIcon;
+        }
+    }
 }
 
 
@@ -402,7 +731,8 @@ async function sendMessage(messageOverride = null) {
 
             displayMessage(
                 data.response,
-                "bot-message"
+                "bot-message",
+                message
             );
 
             currentConversation.messages.push({
@@ -988,14 +1318,28 @@ function loadConversation(id) {
 
     chatMessages.innerHTML = "";
 
+    let previousUserMessage = "";
+
     chat.messages.forEach(msg => {
 
-        displayMessage(
-            msg.text,
-            msg.sender === "user"
-                ? "user-message"
-                : "bot-message"
-        );
+        if (msg.sender === "user") {
+
+            previousUserMessage = msg.text;
+
+            displayMessage(
+                msg.text,
+                "user-message"
+            );
+
+        } else {
+
+            displayMessage(
+                msg.text,
+                "bot-message",
+                previousUserMessage
+            );
+
+        }
 
     });
 
