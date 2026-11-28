@@ -1834,3 +1834,30 @@ body.sidebar-resizing {
 .sidebar.collapsed {
     padding: 0;
 }
+
+/* Conversation Search */
+
+.history-search {
+    margin-bottom: 14px;
+}
+
+    .history-search input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--background);
+        color: var(--text-dark);
+        font-size: 13px;
+        transition: all 0.2s ease;
+    }
+
+        .history-search input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(101,86,204,0.08);
+        }
+
+        .history-search input::placeholder {
+            color: var(--text-light);
+        }
