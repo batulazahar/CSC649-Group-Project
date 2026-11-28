@@ -1862,8 +1862,9 @@ function updateQuickThemeButton() {
     const isDark =
         document.body.dataset.theme === "dark";
 
-    quickThemeIcon.textContent =
-        isDark ? "â˜€" : "â˜¾";
+    quickThemeIcon.textContent = isDark
+    ? "\u2600"
+    : "\u263D";
 
     quickThemeText.textContent =
         isDark ? "Light Mode" : "Dark Mode";
@@ -2326,8 +2327,9 @@ if (!SpeechRecognition) {
     const recognition = new SpeechRecognition();
 
     recognition.lang = "en-MY";
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 3;
 
     voiceButton.addEventListener("click", () => {
 
@@ -2344,36 +2346,45 @@ if (!SpeechRecognition) {
         }
 
     });
+    let voiceBaseText = "";
 
     recognition.onstart = () => {
-        updateVoiceButton(true);
-        showVoiceStatus("Listening...", true);
-    };
+    voiceBaseText = userInput.value.trim();
 
-    recognition.onresult = (event) => {
+    updateVoiceButton(true);
+    showVoiceStatus("Listening... Speak now.", true);
+};
 
-        const transcript =
-            event.results[0][0].transcript;
+recognition.onresult = (event) => {
+    let finalTranscript = "";
+    let interimTranscript = "";
 
-        const existingText =
-            userInput.value.trim();
+    for (let i = 0; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
 
-        const combinedText = existingText
-            ? `${existingText} ${transcript}`
-            : transcript;
+        if (event.results[i].isFinal) {
+            finalTranscript += transcript + " ";
+        } else {
+            interimTranscript += transcript + " ";
+        }
+    }
 
-        userInput.value = userInput.maxLength > 0
-            ? combinedText.slice(0, userInput.maxLength)
-            : combinedText;
+    const combinedText = [
+        voiceBaseText,
+        finalTranscript.trim(),
+        interimTranscript.trim()
+    ].filter(Boolean).join(" ");
 
-        userInput.dispatchEvent(
-            new Event("input", { bubbles: true })
-        );
+    userInput.value = userInput.maxLength > 0
+        ? combinedText.slice(0, userInput.maxLength)
+        : combinedText;
 
-        userInput.focus();
+    userInput.dispatchEvent(
+        new Event("input", { bubbles: true })
+    );
 
-        showVoiceStatus("Voice input captured.");
-    };
+    showVoiceStatus("Listening...", true);
+};
 
     recognition.onerror = (event) => {
 
@@ -2402,12 +2413,10 @@ if (!SpeechRecognition) {
     };
 
     recognition.onend = () => {
+    updateVoiceButton(false);
 
-        updateVoiceButton(false);
-
-        if (voiceStatus.textContent === "Listening...") {
-            showVoiceStatus("");
+        if (voiceStatus.classList.contains("listening")) {
+            showVoiceStatus("Voice input stopped.");
         }
-
     };
 }
