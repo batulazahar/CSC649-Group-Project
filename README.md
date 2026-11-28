@@ -63,12 +63,12 @@ This feature is planned for future development and is not yet part of the curren
 
 ## 5. Team Members
 
-| Name | GitHub Username | Role |
+| Name | GitHub Profile | Role |
 |---|---|---|
-| NUR IRDINA BATRISYA BINTI ZULHAZMI | TBD | Project Leader |
-| NUR EMALLYN SOFEA BINTI NORIZAL | TBD | Frontend Developer |
-| NURBATUL ZAYNAB BINTI DARUL AZAHAR | TBD | Backend Developer / Model Integrator |
-| TIJANIE MARSYA BINTI ROSLIM | TBD | Domain Specialist |
+| NUR IRDINA BATRISYA BINTI ZULHAZMI | [irdinazlhzm](https://github.com/irdinazlhzm) | Project Leader |
+| NUR EMALLYN SOFEA BINTI NORIZAL | [emallynsofea](https://github.com/emallynsofea) | Backend Developer |
+| NURBATUL ZAYNAB BINTI DARUL AZAHAR | [batulazahar](https://github.com/batulazahar) | Frontend Developer / Model Integrator |
+| TIJANIE MARSYA BINTI ROSLIM | [janieroslim1230](https://github.com/janieroslim1230) | Frontend Developer / Domain Specialist |
 
 ## 6. Domain and Datasets
 
@@ -93,8 +93,6 @@ The project uses custom CSV datasets to support travel information retrieval and
 
 The datasets are stored in the `data/` directory and loaded by `src/data_loader.py`.
 
-*Dataset source information should be documented according to the actual sources used by the project team.*
-
 ## 7. System Architecture
 
 The system follows a client-server architecture that combines dataset retrieval, external API integration and AI-powered response generation.
@@ -108,28 +106,6 @@ The system follows a client-server architecture that combines dataset retrieval,
 5. The chatbot generates a response.
 6. The response is returned to the frontend and displayed to the user.
 
-### Architecture Diagram
-
-```mermaid
-flowchart TD
-    A[User] --> B[Web Chat Interface]
-    B --> C[Flask Backend - web_app.py]
-    C --> D[Chatbot Logic - src/chatbot.py]
-
-    D --> E[Travel Dataset]
-    D --> F[Gen Z Slang Dataset]
-    D --> G[Frankfurter Currency API]
-    D --> H[Google Gemini API]
-
-    E --> I[Chatbot Response]
-    F --> I
-    G --> I
-    H --> I
-
-    I --> C
-    C --> B
-    B --> J[Display Response to User]
-```
 
 ## 8. Technologies and Model
 

@@ -7,12 +7,19 @@ from difflib import get_close_matches
 from dotenv import load_dotenv
 from google import genai
 from google.genai.errors import APIError
+from datetime import date, timedelta
 
 from src.data_loader import load_travel_dataset, load_slang_dataset
 
 from src.currency_converter import (
     convert_currency,
     parse_currency_question
+)
+
+from src.expense_tracker import (
+    add_expense,
+    get_user_expenses,
+    get_total_expenses
 )
 
 # ==========================================
@@ -466,9 +473,6 @@ def retrieve_travel_records(user_question, top_n=5):
 # 5. SLANG DATA RETRIEVAL
 # ==========================================
 
-
-
-
 def retrieve_slang_records(user_question):
 
     def normalize_text(text):
@@ -530,12 +534,300 @@ def retrieve_slang_records(user_question):
     return matched_slang
 
 
+# ==========================================
+# EXPENSE DETECTION AND EXTRACTION
+# ==========================================
+
+def detect_expense_category(message):
+
+    question = message.lower()
+
+    categories = {
+        "Food": [
+            "food", "lunch", "dinner", "breakfast",
+            "coffee", "restaurant", "meal", "snack",
+            "groceries", "grocery"
+        ],
+
+        "Transport": [
+            "grab", "taxi", "bus", "train", "metro",
+            "petrol", "fuel", "parking", "transport"
+        ],
+
+        "Accommodation": [
+            "hotel", "hostel", "airbnb", "accommodation",
+            "room booking"
+        ],
+
+        "Shopping": [
+            "shopping", "clothes", "shoes", "souvenir",
+            "shopping mall"
+        ],
+
+        "Entertainment": [
+            "movie", "cinema", "ticket", "museum",
+            "entertainment", "theme park"
+        ],
+
+        "Other": []
+    }
+
+    for category, keywords in categories.items():
+
+        if any(
+            re.search(
+                rf"\b{re.escape(keyword)}\b",
+                question
+            )
+            for keyword in keywords
+        ):
+            return category
+
+    return "Other"
+
+def parse_expense_message(user_message):
+
+    question = user_message.lower().strip()
+
+    # Identify messages that indicate an expense recording action.
+    expense_actions = [
+        r"\bspent\b",
+        r"\bpaid\b",
+        r"\bbought\b",
+        r"\bpurchased\b",
+        r"\blog\b",
+        r"\brecord\b",
+        r"\badd\b"
+    ]
+
+    if not any(
+        re.search(pattern, question)
+        for pattern in expense_actions
+    ):
+        return None
+
+    # Detect negative amounts.
+    negative_amount = re.search(
+        r"\b(?:RM|MYR)\s*-\s*\d+(?:,\d{3})*(?:\.\d{1,2})?",
+        question,
+        re.IGNORECASE
+    )
+
+    if negative_amount:
+        return {
+            "error": "The expense amount must be greater than RM0. Please enter a valid amount."
+        }
+
+    # Extract the expense amount.
+    amount_match = re.search(
+        r"(?:\bRM\s*|\bMYR\s*)"
+        r"(\d+(?:,\d{3})*(?:\.\d{1,2})?)"
+        r"|"
+        r"\b(\d+(?:,\d{3})*(?:\.\d{1,2})?)"
+        r"\s*(?:MYR|ringgit)\b"
+        r"|"
+        r"\b(?:spent|paid|bought|purchased|for)\s+"
+        r"(\d+(?:,\d{3})*(?:\.\d{1,2})?)\b",
+        question,
+        re.IGNORECASE
+    )
+
+    if not amount_match:
+        return None
+
+    amount_text = next(
+        (
+            value
+            for value in amount_match.groups()
+            if value is not None
+        ),
+        None
+    )
+
+    if not amount_text:
+        return None
+
+    amount = float(amount_text.replace(",", ""))
+
+    if amount <= 0:
+        return {
+            "error": "The expense amount must be greater than RM0. Please enter a valid amount."
+        }
+
+    # Determine the expense date.
+    expense_date = date.today()
+
+    if re.search(r"\byesterday\b", question):
+        expense_date -= timedelta(days=1)
+
+    # Detect the expense category.
+    category = detect_expense_category(user_message)
+
+    # Extract the expense description.
+    description_match = re.search(
+        r"\b(?:on|for|at)\s+(.+?)(?:[.!?]|$)",
+        question
+    )
+
+    description = (
+        description_match.group(1).strip()
+        if description_match
+        else category
+    )
+
+    description = description.capitalize()
+
+    return {
+        "amount": amount,
+        "currency": "MYR",
+        "category": category,
+        "description": description,
+        "expense_date": expense_date.isoformat()
+    }
+
+
+# ==========================================
+# RECORD EXPENSE
+# ==========================================
+
+def record_user_expense(user_question, user_id):
+
+    expense = parse_expense_message(user_question)
+
+    if not expense:
+        return None
+
+    if "error" in expense:
+        return expense["error"]
+
+    if not user_id:
+        return "Please sign in with Google to record your expenses."
+
+    add_expense(
+        user_id=user_id,
+        amount=expense["amount"],
+        category=expense["category"],
+        description=expense["description"],
+        expense_date=expense["expense_date"],
+        currency=expense["currency"]
+    )
+
+    return (
+        f"Your expense has been recorded successfully! 😊\n\n"
+        f"Amount: RM{expense['amount']:.2f}\n"
+        f"Category: {expense['category']}\n"
+        f"Description: {expense['description']}\n"
+        f"Date: {expense['expense_date']}"
+    )
+
+# ==========================================
+# RETRIEVE USER EXPENSES
+# ==========================================
+
+def retrieve_user_expenses(user_id, expense_date=None):
+
+    if not user_id:
+        return "Please sign in with Google to view your expenses."
+
+    expenses = get_user_expenses(
+        user_id=user_id,
+        expense_date=expense_date
+    )
+
+    if not expenses:
+        if expense_date:
+            return f"You have no recorded expenses for {expense_date}."
+
+        return "You have not recorded any expenses yet."
+
+    total = get_total_expenses(
+        user_id=user_id,
+        expense_date=expense_date
+    )
+
+    response = "Here are your recorded expenses:\n\n"
+
+    for index, expense in enumerate(expenses, start=1):
+        response += (
+            f"{index}. **{expense['description']}**\n"
+            f"   Amount: RM{expense['amount']:.2f} | "
+            f"Category: {expense['category']} | "
+            f"Date: {expense['expense_date']}\n\n"
+    )
+
+    response += f"Total spending: RM{total:.2f}"
+
+    return response
+
+def retrieve_expense_summary(user_id, expense_date=None):
+
+    if not user_id:
+        return "Please sign in with Google to view your expenses."
+
+    expenses = get_user_expenses(
+        user_id=user_id,
+        expense_date=expense_date
+    )
+
+    if not expenses:
+        if expense_date:
+            return f"You have no recorded expenses for {expense_date}."
+
+        return "You have not recorded any expenses yet."
+
+    total = get_total_expenses(
+        user_id=user_id,
+        expense_date=expense_date
+    )
+
+    expense_count = len(expenses)
+
+    if expense_date:
+        formatted_date = date.fromisoformat(
+            expense_date
+        ).strftime("%d %B %Y")
+
+        heading = f"Your spending on {formatted_date}"
+    else:
+        heading = "Your total recorded spending"
+
+    return (
+        f"{heading}\n\n"
+        f"Total spending: RM{total:.2f}\n"
+        f"Number of expenses: {expense_count}"
+    )
+
+# ==========================================
+# DETECT EXPENSE RETRIEVAL QUESTIONS
+# ==========================================
+
+def is_expense_query(user_question):
+
+    message = user_question.lower()
+
+    expense_queries = [
+        "show my expenses",
+        "view my expenses",
+        "list my expenses",
+        "my expenses",
+        "how much have i spent",
+        "how much did i spend",
+        "total expenses",
+        "total spending",
+        "show my spending",
+        "view my spending"
+    ]
+
+    return any(
+        query in message
+        for query in expense_queries
+    )
 
 # ==========================================
 # 6. GENERATE CHATBOT RESPONSE
 # ==========================================
 
-def get_chatbot_response(user_question):
+def get_chatbot_response(user_question, user_id=None):
     if not user_question or not user_question.strip():
         return "You didn't include a question. Please enter your question."
     # Check whether the question is a currency conversion request.
@@ -543,7 +835,6 @@ def get_chatbot_response(user_question):
 
 
     # Detect incomplete currency conversion questions
-
 
     currency_keywords = [
         "convert",
@@ -601,6 +892,47 @@ def get_chatbot_response(user_question):
         except (ValueError, ConnectionError) as error:
             return f"Sorry, I couldn't complete the currency conversion. {error}"
 
+    # ==========================================
+    # EXPENSE RECORDING
+    # ==========================================
+
+    expense_response = record_user_expense(
+        user_question,
+        user_id
+    )
+
+    if expense_response:
+        return expense_response
+
+    # EXPENSE RETRIEVAL
+    if is_expense_query(user_question):
+
+        expense_date = None
+
+        if re.search(r"\btoday\b", user_question, re.IGNORECASE):
+            expense_date = date.today().isoformat()
+
+        elif re.search(r"\byesterday\b", user_question, re.IGNORECASE):
+            expense_date = (
+                date.today() - timedelta(days=1)
+            ).isoformat()
+
+        # Show summary for spending questions.
+        if re.search(
+            r"\bhow much\b|\btotal\b",
+            user_question,
+            re.IGNORECASE
+        ):
+            return retrieve_expense_summary(
+                user_id=user_id,
+                expense_date=expense_date
+            )
+
+        # Show detailed list for expense-list questions.
+        return retrieve_user_expenses(
+            user_id=user_id,
+            expense_date=expense_date
+        )
 
     # 1. Retrieve relevant travel and slang information.
     relevant_travel = retrieve_travel_records(user_question)
@@ -623,10 +955,6 @@ def get_chatbot_response(user_question):
         for pattern in sensitive_patterns
     )
 
-
-
-
-
     # 4. Handle direct slang questions using the dataset
     slang_question = any(phrase in question for phrase in [
         "what does",
@@ -648,10 +976,6 @@ def get_chatbot_response(user_question):
             )
 
         return "\n\n".join(slang_answers)
-
-
-
-
 
 
     if transport_related and sensitive_question:
@@ -747,8 +1071,6 @@ def get_chatbot_response(user_question):
             f"Entities: {row['entities']}\n"
             f"Answer: {row['response']}\n\n"
         )
-
-
 
 
     # 5. Check for conflicting journey durations on an exact route.
